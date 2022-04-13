@@ -11,17 +11,20 @@ endif
 
 .PHONY: gemm_dense_common
 
-gemm_dense_common: gemm-dense.cpp
+gemm_dense_common: gemm-dense.cpp gemm-dense-openmp.cpp
 	$(CC) gemm-dense.cpp -S -o gemm-dense-$(CC).s $(CC_FLAGS)
 	$(CC) gemm-dense.cpp -o gemm-dense-$(CC) $(CC_FLAGS)
+	$(CC) gemm-dense-openmp.cpp -S -o gemm-dense-openmp-$(CC).s $(CC_FLAGS) -fopenmp
+	$(CC) gemm-dense-openmp.cpp -o gemm-dense-openmp-$(CC) $(CC_FLAGS) -fopenmp
 
 gcc: gemm_dense_common
 	
 clang: gemm_dense_common
 	$(CC) gemm-dense.cpp -S -emit-llvm $(CC_FLAGS)
+	$(CC) gemm-dense-openmp.cpp -S -emit-llvm $(CC_FLAGS) -fopenmp
 
 
 .PHONY: clean
 
 clean : 
-	rm gemm-dense-* gemm-dense.ll
+	rm *.s *.ll *-g++ *-clang++

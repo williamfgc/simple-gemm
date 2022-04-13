@@ -21,10 +21,11 @@ function gemm!(A::Array{Float32,2}, B::Array{Float32,2}, C::Array{Float32,2})
     A_cols = size(A)[1]
     B_rows = size(B)[2]
 
-    for i = 1:A_rows
+
+    Base.Threads.@threads for i = 1:A_rows
         for k = 1:A_cols
             for j = 1:B_rows
-                @inbounds C[j, i] += A[k, i] * B[j, k]
+                C[j, i] += A[k, i] * B[j, k]
             end
         end
     end
@@ -64,8 +65,8 @@ function main(args::Array{String,1})
     fill_random(A)
     fill_random(B)
 
-    #BenchmarkTools.@time gemm!(A, B, C)
-    InteractiveUtils.@code_llvm gemm!(A, B, C)
+    BenchmarkTools.@time gemm!(A, B, C)
+    #InteractiveUtils.@code_llvm gemm!(A, B, C)
     #InteractiveUtils.@code_native gemm!(A, B, C)
 
 
