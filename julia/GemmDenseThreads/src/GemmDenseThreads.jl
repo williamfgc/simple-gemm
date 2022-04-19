@@ -58,10 +58,13 @@ function main(args::Array{String,1})::Int32
 
     gemm!(A, B, C)
 
+    # println(C)
+
     return 0
 
 end
 
 
-
 end # module
+
+GemmDenseThreads.main(ARGS)
