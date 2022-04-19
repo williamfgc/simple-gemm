@@ -7,6 +7,8 @@
 #include <iostream>
 #include <random>
 
+#include <omp.h>
+
 namespace {
 void fill_random(float *A, const int &n, const int &m) {
   std::mt19937 e(std::chrono::duration_cast<std::chrono::hours>(
@@ -22,11 +24,17 @@ void fill_random(float *A, const int &n, const int &m) {
 
 void gemm(float *A, float *B, float *C, const int &A_rows, const int &A_cols,
           const int &B_rows) {
-  for (int i = 0; i < A_rows; i++) {
-    for (int k = 0; k < A_cols; k++) {
-      for (int j = 0; j < B_rows; j++) {
-        C[i * B_rows + j] += A[i * A_cols + k] * B[k * B_rows + j];
+
+  int i, k, j;
+#pragma omp parallel for shared(A, B, C, A_rows, A_cols, B_rows) private(i, k, \
+                                                                         j)
+  for (i = 0; i < A_rows; i++) {
+    for (k = 0; k < A_cols; k++) {
+      float sum = 0.0f;
+      for (j = 0; j < B_rows; j++) {
+        sum += A[i * A_cols + k] * B[k * B_rows + j];
       }
+      C[i * B_rows + j] = sum;
     }
   }
 }
@@ -62,9 +70,8 @@ int main(int argc, char *argv[]) {
   const double dtime =
       std::chrono::duration<double, std::milli>(t_end - t_start).count() / 1E6;
 
-  unsigned long long int total_memory_GB =
-      (A_rows * A_cols) * (B_rows * B_cols) * (A_rows * B_cols) *
-      sizeof(float) / 1E9;
+  const double total_memory_GB = (A_rows * A_cols) * (B_rows * B_cols) *
+                                 (A_rows * B_cols) * sizeof(float) / 1E9;
 
   std::cout << "ordinary gemm time: " << dtime << " s for " << A_rows << " "
             << B_cols << " rows columns. Memory = " << total_memory_GB << " GB"
