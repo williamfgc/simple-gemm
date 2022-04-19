@@ -26,12 +26,14 @@ static void fill_random(float *A, const int n, const int m) {
 static void gemm(float *A, float *B, float *C, const int A_rows,
                  const int A_cols, const int B_rows) {
   int i, k, j;
-#pragma omp parallel for shared(A, B, C, A_rows, A_cols, B_rows) private(i, k, \
-                                                                         j)
+  float temp;
+#pragma omp parallel for shared(A, B, C, A_rows, A_cols,                       \
+                                B_rows) private(i, k, j, temp)
   for (i = 0; i < A_rows; i++) {
     for (k = 0; k < A_cols; k++) {
+      temp = A[i * A_cols + k];
       for (j = 0; j < B_rows; j++) {
-        C[i * B_rows + j] += A[i * A_cols + k] * B[k * B_rows + j];
+        C[i * B_rows + j] += temp * B[k * B_rows + j];
       }
     }
   }
@@ -60,20 +62,7 @@ int main(int argc, char *argv[]) {
   fill_random(A, A_rows, A_cols);
   fill_random(B, B_rows, B_cols);
 
-  struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &start);
   gemm(A, B, C, A_rows, A_cols, B_cols);
-  clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-
-  float dtime = ((float)((end.tv_sec - start.tv_sec) * 1000000 +
-                         (end.tv_nsec - start.tv_nsec) / 1000)) /
-                1E6;
-
-  const double total_memory_GB = (A_rows * A_cols) * (B_rows * B_cols) *
-                                 (A_rows * B_cols) * sizeof(float) / 1.E9;
-
-  printf("ordinary gemm time: %f s for %d %d rows columns. Memory = %f GB\n",
-         dtime, A_rows, B_cols, total_memory_GB);
 
   free(A);
   free(B);
