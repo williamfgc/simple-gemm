@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   gemm(A, B, C, A_rows, A_cols, B_cols);
   tmp = print_dtime(tmp, "simple gemm");
 
-  print_dtime(start, "total");
+  print_dtime(start, "total time");
 
   free(A);
   tmp = print_dtime(tmp, "free A");
