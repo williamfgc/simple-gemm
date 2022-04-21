@@ -15,4 +15,4 @@ all: gemm-dense-openmp.f03
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-ifort *-gfortran
+	rm *.s *.ll *-ifort *-gfortran *.mod

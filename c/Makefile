@@ -18,7 +18,6 @@ gemm_dense_common: gemm-dense-openmp.c
 gcc: gemm_dense_common
 	
 clang: gemm_dense_common
-	$(CC) gemm-dense.c -S -emit-llvm $(CC_FLAGS)
 	$(CC) gemm-dense-openmp.c -S -emit-llvm $(CC_FLAGS) -fopenmp
 
 

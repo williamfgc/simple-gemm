@@ -39,6 +39,17 @@ static void gemm(float *A, float *B, float *C, const int A_rows,
   }
 }
 
+static struct timespec print_dtime(struct timespec start, const char *process) {
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+  const float dtime = ((float)((end.tv_sec - start.tv_sec) * 1000000 +
+                               (end.tv_nsec - start.tv_nsec) / 1000)) /
+                      1E6;
+
+  printf("Time to %s = %f s\n", process, dtime);
+  return end;
+}
+
 int main(int argc, char *argv[]) {
 
   int A_rows, A_cols, B_rows, B_cols;
@@ -54,18 +65,36 @@ int main(int argc, char *argv[]) {
     B_cols = atoi(argv[3]);
   }
 
+  struct timespec start, tmp;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+
   float *A = (float *)malloc(A_rows * A_cols * sizeof(float));
+  tmp = print_dtime(start, "allocate A");
+
   float *B = (float *)malloc(B_rows * B_cols * sizeof(float));
+  tmp = print_dtime(tmp, "allocate B");
+
   // value-init to zero
   float *C = (float *)calloc(A_rows * B_cols, sizeof(float));
+  tmp = print_dtime(tmp, "initialize C");
 
   fill_random(A, A_rows, A_cols);
+  tmp = print_dtime(tmp, "fill A");
+
   fill_random(B, B_rows, B_cols);
+  tmp = print_dtime(tmp, "fill B");
 
   gemm(A, B, C, A_rows, A_cols, B_cols);
+  tmp = print_dtime(tmp, "simple gemm");
+
+  print_dtime(start, "total time");
 
   free(A);
+  tmp = print_dtime(tmp, "free A");
   free(B);
+  tmp = print_dtime(tmp, "free B");
   free(C);
+  tmp = print_dtime(tmp, "free C");
+
   return 0;
 }

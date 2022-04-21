@@ -2,7 +2,6 @@ module GemmDenseThreads
 
 import Random
 
-
 @doc """
 Simplified gemm: C = alpha A x B + C where alpha = 1 , C = zeros, 
 so:
@@ -49,14 +48,14 @@ function main(args::Array{String,1})::Int32
     end
 
     # Julia is column-based (like Fortran)
-    A = Array{Float32,2}(undef, A_rows, A_cols)
-    B = Array{Float32,2}(undef, B_rows, B_cols)
-    C = zeros(Float32, A_rows, B_cols)
+    @time A = Array{Float32,2}(undef, A_rows, A_cols)
+    @time B = Array{Float32,2}(undef, B_rows, B_cols)
+    @time C = zeros(Float32, A_rows, B_cols)
 
-    Random.rand!(A)
-    Random.rand!(B)
+    @time Random.rand!(A)
+    @time Random.rand!(B)
 
-    gemm!(A, B, C)
+    @time gemm!(A, B, C)
 
     # println(C)
 
