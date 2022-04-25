@@ -30,3 +30,10 @@ Manifest.toml
 *-gcc
 *-clang
 *.s
+
+
+*_job.sh
+*.out
+*.err
+
+
