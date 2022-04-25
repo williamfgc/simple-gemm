@@ -25,3 +25,8 @@ Manifest.toml
 
 # Fortran modules
 *.mod
+
+.vscode/
+*-gcc
+*-clang
+*.s

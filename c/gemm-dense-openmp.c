@@ -18,7 +18,7 @@ static void fill_random(float *A, const int n, const int m) {
   int i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
-      A[i * m + j] = (float)rand();
+      A[i * m + j] = (float)rand() / (float)RAND_MAX;
     }
   }
 }
