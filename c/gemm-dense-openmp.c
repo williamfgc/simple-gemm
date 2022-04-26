@@ -7,13 +7,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 static void fill_random(float *A, const int n, const int m) {
-
-  time_t t;
-  // Assign seed from current time integer
-  srand((unsigned int)time(&t));
 
   int i, j;
   for (i = 0; i < n; ++i) {
@@ -27,8 +25,10 @@ static void gemm(float *A, float *B, float *C, const int A_rows,
                  const int A_cols, const int B_rows) {
   int i, k, j;
   float temp;
+#ifdef _OPENMP
 #pragma omp parallel for shared(A, B, C, A_rows, A_cols,                       \
                                 B_rows) private(i, k, j, temp)
+#endif
   for (i = 0; i < A_rows; i++) {
     for (k = 0; k < A_cols; k++) {
       temp = A[i * A_cols + k];
@@ -50,7 +50,23 @@ static struct timespec print_dtime(struct timespec start, const char *process) {
   return end;
 }
 
+static void print_matrix(float *A, const int A_rows, const int A_cols) {
+
+  int i, j;
+  printf("[");
+  for (i = 0; i < A_rows; ++i) {
+    for (j = 0; j < A_cols; ++j) {
+      printf("%f, ", A[i * A_cols + j]);
+    }
+  }
+  printf("]\n");
+}
+
 int main(int argc, char *argv[]) {
+
+  // Assign seed from current time integer
+  time_t t;
+  srand((unsigned int)time(&t));
 
   int A_rows, A_cols, B_rows, B_cols;
 

@@ -28,8 +28,11 @@ Manifest.toml
 
 .vscode/
 *-gcc
+*-g++
 *-*clang
+*-*clang++
 *.s
+*.ll
 
 
 *_job.sh

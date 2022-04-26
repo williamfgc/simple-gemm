@@ -1,6 +1,6 @@
 
 FC=gfortran
-FC_FLAGS=-O3 -Wall
+FC_FLAGS=-O3 -Wall -cpp
 
 ifeq ($(FC),ifort)
 OMP_FLAG=-openmp

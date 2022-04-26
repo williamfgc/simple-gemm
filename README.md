@@ -10,4 +10,3 @@ C = A x B
 A and B are initialized with random numbers
 C is initialized with zeros
 
-Only the gemm function is timed.
