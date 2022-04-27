@@ -1,6 +1,7 @@
-module GemmDenseThreads
+module GemmDenseBLAS
 
 import Random
+import LinearAlgebra
 
 @doc """
 Simplified gemm: C = alpha A x B + C where alpha = 1 , C = zeros, 
@@ -9,19 +10,9 @@ C = A x B
 """
 function gemm!(A::Array{Float32,2}, B::Array{Float32,2}, C::Array{Float32,2})
 
-    A_rows = size(A)[1]
-    A_cols = size(A)[2]
-    B_cols = size(B)[2]
-
-    Base.Threads.@threads for j = 1:B_cols
-        for l = 1:A_cols
-            temp::Float32 = B[l, j]
-            for i = 1:A_rows
-                @inbounds C[i, j] += temp * A[i, l]
-            end
-        end
-    end
+    LinearAlgebra.BLAS.gemm!('N', 'N', Float32(1.0), A, B, Float32(0.0), C)
 end
+
 
 function main(args::Array{String,1})::Int32
 
@@ -60,7 +51,7 @@ function main(args::Array{String,1})::Int32
     print("Time to fill B")
     @time Random.rand!(B)
 
-    print("Time to simple gemm")
+    print("Time to blas gemm")
     @time gemm!(A, B, C)
 
     # println(C)
@@ -69,4 +60,6 @@ function main(args::Array{String,1})::Int32
 
 end
 
-end # module
+end
+
+
