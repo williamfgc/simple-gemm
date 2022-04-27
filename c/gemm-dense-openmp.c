@@ -1,8 +1,3 @@
-
-// From
-// https://repository.prace-ri.eu/git/CodeVault/hpc-kernels/dense_linear_algebra/-/blob/master/gemm/gemm_openmp/src/gemm_openmp.cpp
-// Apache v2 license
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

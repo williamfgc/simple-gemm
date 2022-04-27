@@ -27,10 +27,11 @@ Manifest.toml
 *.mod
 
 .vscode/
-*-gcc
-*-g++
-*-*clang
-*-*clang++
+# Binaries or outputs
+*-gcc*
+*-g++*
+*-*clang*
+*-*clang++*
 *.s
 *.ll
 

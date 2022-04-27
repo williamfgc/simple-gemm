@@ -1,7 +1,13 @@
+
+// From
+// https://repository.prace-ri.eu/git/CodeVault/hpc-kernels/dense_linear_algebra/-/blob/master/gemm/gemm_openmp/src/gemm_openmp.cpp
+// Apache v2 license
+
 #include <chrono>
 #include <iostream>
 #include <random>
-#include <thread>
+
+#include "cblas.h"
 
 namespace {
 void fill_random(float *A, const int n, const int m, std::mt19937 &r) {
@@ -11,41 +17,6 @@ void fill_random(float *A, const int n, const int m, std::mt19937 &r) {
     for (int j = 0; j < m; ++j) {
       A[i * m + j] = f(r);
     }
-  }
-}
-
-void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
-          const int B_rows, const int nthreads = 1) {
-
-  auto lf_gemm_thread = [](float *A, float *B, float *C, const int A_cols,
-                           const int B_rows, const int start,
-                           const int stride) {
-    for (int i = start; i < (start + stride); ++i) {
-      for (int k = 0; k < A_cols; ++k) {
-        float temp = A[i * A_cols + k];
-        for (int j = 0; j < B_rows; ++j) {
-          C[i * B_rows + j] += temp * B[k * B_rows + j];
-        }
-      }
-    }
-  };
-
-  std::vector<std::thread> threads;
-  threads.reserve(nthreads);
-
-  const int nindices = A_rows / nthreads;
-
-  for (int tid = 0; tid < nthreads; ++tid) {
-    const int start = nindices * tid;
-    const int stride =
-        (tid == nthreads - 1) ? nindices + A_rows % nthreads : nindices;
-
-    threads.push_back(
-        std::thread(lf_gemm_thread, A, B, C, A_cols, B_rows, start, stride));
-  }
-
-  for (auto &t : threads) {
-    t.join();
   }
 }
 
@@ -59,18 +30,6 @@ print_dtime(const std::chrono::system_clock::time_point &start,
   std::cout << "Time to " << hint << " " << dtime << " s\n";
   return end;
 }
-
-// static void print_matrix(float *A, const int A_rows, const int A_cols) {
-
-//   std::cout << "[ ";
-//   for (int i = 0; i < A_rows; ++i) {
-//     for (int j = 0; j < A_cols; ++j) {
-//       std::cout << A[i * A_cols + j] << " ";
-//     }
-//     std::cout << ";\n";
-//   }
-//   std::cout << "]\n";
-// }
 
 } // namespace
 
@@ -107,9 +66,14 @@ int main(int argc, char *argv[]) {
   tmp = print_dtime(tmp, "fill A");
   fill_random(B, B_rows, B_cols, e);
   tmp = print_dtime(tmp, "fill B");
-  const int nthreads = std::stoi(std::getenv("OMP_NUM_THREADS"));
-  gemm(A, B, C, A_rows, A_cols, B_cols, nthreads);
-  tmp = print_dtime(tmp, "simple gemm");
+
+  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+              static_cast<blasint>(A_rows), static_cast<blasint>(B_cols),
+              static_cast<blasint>(A_cols), 1.0f, A,
+              static_cast<blasint>(A_cols), B, static_cast<blasint>(B_rows), 0,
+              C, static_cast<blasint>(B_cols));
+
+  tmp = print_dtime(tmp, "cblas gemm");
   tmp = print_dtime(start, "total time");
 
   delete[] A;

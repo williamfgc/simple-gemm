@@ -44,7 +44,7 @@ function print_dtime(start, hint, ierr)
     integer(kind=4) :: print_dtime
     
     call system_clock(print_dtime, rate)
-    write(*,'(A10,A15,A3,F8.5,A3)') 'Time to ', trim(hint), ' = ', real(print_dtime-start)/real(rate), ' s'
+    write(*,'(A10,A15,A3,F15.5,A3)') 'Time to ', trim(hint), ' = ', real(print_dtime-start)/real(rate), ' s'
     ierr = 0
     return
 end function
