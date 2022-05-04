@@ -13,14 +13,18 @@ function gemm!(A::Array{Float32,2}, B::Array{Float32,2}, C::Array{Float32,2})
     A_cols = size(A)[2]
     B_cols = size(B)[2]
 
-    Base.Threads.@threads for j = 1:B_cols
+
+    Threads.@threads for j = 1:B_cols
         for l = 1:A_cols
-            temp::Float32 = B[l, j]
+            @inbounds temp::Float32 = B[l, j]::Float32
             for i = 1:A_rows
                 @inbounds C[i, j] += temp * A[i, l]
             end
         end
     end
+
+
+
 end
 
 function main(args::Array{String,1})::Int32
@@ -48,19 +52,19 @@ function main(args::Array{String,1})::Int32
     end
 
     # Julia is column-based (like Fortran)
-    print("Time to allocate A")
+    print("Time to allocate A ")
     @time A = Array{Float32,2}(undef, A_rows, A_cols)
-    print("Time to allocate B")
+    print("Time to allocate B ")
     @time B = Array{Float32,2}(undef, B_rows, B_cols)
-    print("Time to initialize C")
+    print("Time to initialize C ")
     @time C = zeros(Float32, A_rows, B_cols)
 
-    print("Time to fill A")
+    print("Time to fill A ")
     @time Random.rand!(A)
-    print("Time to fill B")
+    print("Time to fill B ")
     @time Random.rand!(B)
 
-    print("Time to simple gemm")
+    print("Time to simple gemm ")
     @time gemm!(A, B, C)
 
     # println(C)

@@ -39,6 +39,7 @@ Manifest.toml
 *_job.sh
 *.out
 *.err
+*.log
 
 
 
