@@ -1,11 +1,12 @@
 
 CC=clang
 CC_FLAGS=-O3 -march=native -fopenmp
+# Wombat
+# CC_FLAGS=-O3 -march=native -fopenmp -mcpu=neoverse-v1
 
-
-ifeq ($(CC), clang)
+ifneq (,$(findstring clang,$(CC)))
 all: clang
-else 
+else
 all: gemm_dense_common
 endif
 
@@ -22,4 +23,4 @@ clang: gemm_dense_common
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-gcc *-clang
+	rm *.s *.ll *-gcc *-*clang
