@@ -101,11 +101,8 @@ int main(int argc, char *argv[]) {
   print_dtime(start, "total time");
 
   free(A);
-  tmp = print_dtime(tmp, "free A");
   free(B);
-  tmp = print_dtime(tmp, "free B");
   free(C);
-  tmp = print_dtime(tmp, "free C");
 
   return 0;
 }
