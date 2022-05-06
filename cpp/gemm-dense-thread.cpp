@@ -1,18 +1,10 @@
-#include <chrono>
 #include <iostream>
-#include <random>
 #include <thread>
+#include <vector>
+
+#include <gemm-dense-common.h>
 
 namespace {
-void fill_random(float *A, const int n, const int m, std::mt19937 &r) {
-
-  std::uniform_real_distribution<float> f(0, 1);
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < m; ++j) {
-      A[i * m + j] = f(r);
-    }
-  }
-}
 
 void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
           const int B_rows, const int nthreads = 1) {
@@ -47,17 +39,6 @@ void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
   for (auto &t : threads) {
     t.join();
   }
-}
-
-std::chrono::system_clock::time_point
-print_dtime(const std::chrono::system_clock::time_point &start,
-            const std::string &hint) {
-
-  const auto end = std::chrono::high_resolution_clock::now();
-  const double dtime =
-      std::chrono::duration<double, std::milli>(end - start).count() / 1E3;
-  std::cout << "Time to " << hint << " " << dtime << " s\n";
-  return end;
 }
 
 // static void print_matrix(float *A, const int A_rows, const int A_cols) {
@@ -95,28 +76,28 @@ int main(int argc, char *argv[]) {
     B_cols = atoi(argv[3]);
   }
 
+  const int nthreads = std::stoi(std::getenv("OMP_NUM_THREADS"));
+
   const auto start = std::chrono::high_resolution_clock::now();
   float *A = new float[A_rows * A_cols];
-  auto tmp = print_dtime(start, "allocate A");
+  auto tmp = gd::print_dtime(start, "allocate A");
   float *B = new float[B_rows * B_cols];
-  tmp = print_dtime(tmp, "allocate B");
+  tmp = gd::print_dtime(tmp, "allocate B");
   float *C = new float[A_rows * B_cols](); // value-init to zero
-  tmp = print_dtime(tmp, "initialize C");
+  tmp = gd::print_dtime(tmp, "initialize C");
 
-  fill_random(A, A_rows, A_cols, e);
-  tmp = print_dtime(tmp, "fill A");
-  fill_random(B, B_rows, B_cols, e);
-  tmp = print_dtime(tmp, "fill B");
-  const int nthreads = std::stoi(std::getenv("OMP_NUM_THREADS"));
+  gd::fill_random(A, A_rows, A_cols, e);
+  tmp = gd::print_dtime(tmp, "fill A");
+  gd::fill_random(B, B_rows, B_cols, e);
+  tmp = gd::print_dtime(tmp, "fill B");
+
   gemm(A, B, C, A_rows, A_cols, B_cols, nthreads);
-  tmp = print_dtime(tmp, "simple gemm");
-  tmp = print_dtime(start, "total time");
+  tmp = gd::print_dtime(tmp, "simple gemm");
+  tmp = gd::print_dtime(start, "total time");
 
   delete[] A;
-  tmp = print_dtime(tmp, "free A");
   delete[] B;
-  tmp = print_dtime(tmp, "free B");
   delete[] C;
-  tmp = print_dtime(tmp, "free C");
+
   return 0;
 }
