@@ -20,8 +20,7 @@ subroutine gemm (A, B, C, ierr)
     A_cols = size(A,2)
     B_cols = size(B,2)
 
-    !$omp parallel do default(none) &
-    !$omp shared(A,B,C, B_cols, A_cols, A_rows) private(j,l,i, temp)
+    !$omp parallel do default(shared) private(j,l,i, temp)
     do j=1,B_cols
         do l=1,A_cols
             temp = B(l,j)

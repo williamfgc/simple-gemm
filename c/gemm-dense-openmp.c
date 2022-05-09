@@ -17,18 +17,17 @@ static void fill_random(float *A, const int n, const int m) {
 }
 
 static void gemm(float *A, float *B, float *C, const int A_rows,
-                 const int A_cols, const int B_rows) {
+                 const int A_cols, const int B_cols) {
   int i, k, j;
   float temp;
 #ifdef _OPENMP
-#pragma omp parallel for shared(A, B, C, A_rows, A_cols,                       \
-                                B_rows) private(i, k, j, temp)
+#pragma omp parallel for default(shared) private(i, k, j, temp)
 #endif
   for (i = 0; i < A_rows; i++) {
     for (k = 0; k < A_cols; k++) {
       temp = A[i * A_cols + k];
-      for (j = 0; j < B_rows; j++) {
-        C[i * B_rows + j] += temp * B[k * B_rows + j];
+      for (j = 0; j < B_cols; j++) {
+        C[i * B_cols + j] += temp * B[k * B_cols + j];
       }
     }
   }
