@@ -7,7 +7,7 @@
 namespace {
 
 void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
-          const int B_rows) {
+          const int B_cols) {
     std::vector<std::future<void>> futures;
     futures.reserve(A_rows);
 
@@ -16,8 +16,8 @@ void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
             [=]() {
                 for (int k = 0; k < A_cols; k++) {
                     auto temp = A[i * A_cols + k];
-                    for (int j = 0; j < B_rows; j++) {
-                        C[i * B_rows + j] += temp * B[k * B_rows + j];
+                    for (int j = 0; j < B_cols; j++) {
+                        C[i * B_cols + j] += temp * B[k * B_cols + j];
                     }
                 }
             }));

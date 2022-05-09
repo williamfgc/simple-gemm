@@ -7,16 +7,16 @@
 namespace {
 
 void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
-          const int B_rows, const int nthreads = 1) {
+          const int B_cols, const int nthreads = 1) {
 
   auto lf_gemm_thread = [](float *A, float *B, float *C, const int A_cols,
-                           const int B_rows, const int start,
+                           const int B_cols, const int start,
                            const int stride) {
     for (int i = start; i < (start + stride); ++i) {
       for (int k = 0; k < A_cols; ++k) {
         float temp = A[i * A_cols + k];
-        for (int j = 0; j < B_rows; ++j) {
-          C[i * B_rows + j] += temp * B[k * B_rows + j];
+        for (int j = 0; j < B_cols; ++j) {
+          C[i * B_cols + j] += temp * B[k * B_cols + j];
         }
       }
     }
@@ -33,7 +33,7 @@ void gemm(float *A, float *B, float *C, const int A_rows, const int A_cols,
         (tid == nthreads - 1) ? nindices + A_rows % nthreads : nindices;
 
     threads.push_back(
-        std::thread(lf_gemm_thread, A, B, C, A_cols, B_rows, start, stride));
+        std::thread(lf_gemm_thread, A, B, C, A_cols, B_cols, start, stride));
   }
 
   for (auto &t : threads) {

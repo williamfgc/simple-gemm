@@ -13,3 +13,9 @@ find_package(TBB REQUIRED)
 add_subdirectory(c)
 add_subdirectory(cpp)
 add_subdirectory(fortran)
+
+execute_process(COMMAND
+    ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/scripts/run_threads.sh
+        ${CMAKE_BINARY_DIR}
+)
