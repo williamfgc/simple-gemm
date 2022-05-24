@@ -13,7 +13,6 @@ function gemm!(A::Array{Float32,2}, B::Array{Float32,2}, C::Array{Float32,2})
     A_cols = size(A)[2]
     B_cols = size(B)[2]
 
-
     Threads.@threads for j = 1:B_cols
         for l = 1:A_cols
             @inbounds temp::Float32 = B[l, j]::Float32
@@ -30,10 +29,10 @@ end
 function main(args::Array{String,1})::Int32
 
     # must initialize scalars
-    A_rows::Int32 = -1
-    A_cols::Int32 = -1
-    B_rows::Int32 = -1
-    B_cols::Int32 = -1
+    A_rows::Int64 = -1
+    A_cols::Int64 = -1
+    B_rows::Int64 = -1
+    B_cols::Int64 = -1
 
     @show args
 
@@ -45,10 +44,10 @@ function main(args::Array{String,1})::Int32
             ),
         )
     else
-        A_rows = parse(Int32, args[1])
-        A_cols = parse(Int32, args[2])
-        B_rows = parse(Int32, args[2])
-        B_cols = parse(Int32, args[3])
+        A_rows = parse(Int64, args[1])
+        A_cols = parse(Int64, args[2])
+        B_rows = parse(Int64, args[2])
+        B_cols = parse(Int64, args[3])
     end
 
     # Julia is column-based (like Fortran)

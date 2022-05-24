@@ -39,7 +39,7 @@ def main():
     args = sys.argv[1:]
     print(args)
 
-    # args don't include Julia executable and program
+    # args don't include the python executable and program
     if len(args) != 3:
         raise ValueError(
             "Usage: 3 arguments: matrix A rows, matrix A cols and matrix B cols")
@@ -61,7 +61,6 @@ def main():
     gemm(A, B, C)
     tmp = _print_time(tmp, "simple gemm")
     tmp = _print_time(start, "total time")
-    
 
     # print(C)
 

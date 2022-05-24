@@ -35,7 +35,7 @@ function main(args::Array{String,1})::Int32
     CUDA.rand!(B)
 
     # uses cuBLAS 
-    C = A * C
+    C = A * B
     CUDA.synchronize()
 
     return 0

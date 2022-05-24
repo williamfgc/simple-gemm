@@ -12,8 +12,8 @@ subroutine gemm (A, B, C, ierr)
     real(kind=4), dimension(:,:), intent(inout) :: C
     integer(kind=4), intent(out) :: ierr
     ! local variables
-    integer(kind=4) :: A_rows, A_cols, B_cols
-    integer(kind=4) :: i, l, j
+    integer(kind=8) :: A_rows, A_cols, B_cols
+    integer(kind=8) :: i, l, j
     real(kind=4) :: temp
 
     A_rows = size(A,1)
@@ -52,8 +52,8 @@ subroutine print_matrix(A, ierr)
     real(kind=4), dimension(:,:), intent(in) :: A
     integer(kind=4), intent(out) :: ierr
     ! local variables
-    integer(kind=4) :: A_rows, A_cols
-    integer(kind=4) :: i, j
+    integer(kind=8) :: A_rows, A_cols
+    integer(kind=8) :: i, j
     
     A_rows = size(A,1)
     A_cols = size(A,2)
@@ -77,7 +77,7 @@ program main
     implicit none
 
     character(15) :: arg_temp
-    integer(kind=4) :: A_rows, A_cols, B_rows, B_cols
+    integer(kind=8) :: A_rows, A_cols, B_rows, B_cols
     real(kind=4), dimension(:,:), allocatable:: A, B, C
     integer(kind=4) :: ierr
     ! timing variables

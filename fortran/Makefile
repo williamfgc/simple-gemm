@@ -10,20 +10,20 @@ else
 OMP_FLAG=-fopenmp
 endif
 
-ifneq (,$(findstring clang,$(CC)))
-all: clang
+ifneq (,$(findstring flang,$(FC)))
+all: flang
 else
 all: gemm_dense_common
 endif
 
 .PHONY: gemm_dense_common
 
-gemm_dense_common: gemm-dense-openmp.f03
-	$(FC) gemm-dense-openmp.f03 -S -o gemm-dense-openmp-$(FC).s $(FC_FLAGS) $(OMP_FLAG)
-	$(FC) gemm-dense-openmp.f03 -o gemm-dense-openmp-$(FC) $(FC_FLAGS) $(OMP_FLAG)
+gemm_dense_common: gemm-dense-openmp.f90
+	$(FC) gemm-dense-openmp.f90 -S -o gemm-dense-openmp-$(FC).s $(FC_FLAGS) $(OMP_FLAG)
+	$(FC) gemm-dense-openmp.f90 -o gemm-dense-openmp-$(FC) $(FC_FLAGS) $(OMP_FLAG)
 
 clang: gemm_dense_common
-	$(FC) gemm-dense-openmp.f03 -S -emit-llvm $(FC_FLAGS) $(OMP_FLAG)
+	$(FC) gemm-dense-openmp.f90 -S -emit-llvm $(FC_FLAGS) $(OMP_FLAG)
 
 
 .PHONY: clean

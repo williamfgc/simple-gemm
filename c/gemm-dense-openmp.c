@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -6,9 +7,9 @@
 #include <omp.h>
 #endif
 
-static void fill_random(float *A, const int n, const int m) {
+static void fill_random(float *A, const int64_t n, const int64_t m) {
 
-  int i, j;
+  int64_t i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
       A[i * m + j] = (float)rand() / (float)RAND_MAX;
@@ -16,9 +17,9 @@ static void fill_random(float *A, const int n, const int m) {
   }
 }
 
-static void gemm(float *A, float *B, float *C, const int A_rows,
-                 const int A_cols, const int B_cols) {
-  int i, k, j;
+static void gemm(float *A, float *B, float *C, const int64_t A_rows,
+                 const int64_t A_cols, const int64_t B_cols) {
+  int64_t i, k, j;
   float temp;
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i, k, j, temp)
@@ -44,9 +45,9 @@ static struct timespec print_dtime(struct timespec start, const char *process) {
   return end;
 }
 
-static void print_matrix(float *A, const int A_rows, const int A_cols) {
+static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
 
-  int i, j;
+  int64_t i, j;
   printf("[");
   for (i = 0; i < A_rows; ++i) {
     for (j = 0; j < A_cols; ++j) {
@@ -62,30 +63,32 @@ int main(int argc, char *argv[]) {
   time_t t;
   srand((unsigned int)time(&t));
 
-  int A_rows, A_cols, B_rows, B_cols;
+  int64_t A_rows, A_cols, B_rows, B_cols;
 
   if (argc != 4) {
     printf(
         "Usage: 3 arguments: matrix A rows, matrix A cols and matrix B cols\n");
     return 1;
   } else {
-    A_rows = atoi(argv[1]);
-    A_cols = atoi(argv[2]);
-    B_rows = atoi(argv[2]);
-    B_cols = atoi(argv[3]);
+    A_rows = atoll(argv[1]);
+    A_cols = atoll(argv[2]);
+    B_rows = atoll(argv[2]);
+    B_cols = atoll(argv[3]);
   }
+
+  printf("[ %ld %ld %ld ]\n", A_rows, A_cols, B_cols);
 
   struct timespec start, tmp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  float *A = (float *)malloc(A_rows * A_cols * sizeof(float));
+  float *A = (float *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(float));
   tmp = print_dtime(start, "allocate A");
 
-  float *B = (float *)malloc(B_rows * B_cols * sizeof(float));
+  float *B = (float *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(float));
   tmp = print_dtime(tmp, "allocate B");
 
   // value-init to zero
-  float *C = (float *)calloc(A_rows * B_cols, sizeof(float));
+  float *C = (float *)calloc((size_t)A_rows * (size_t)B_cols, sizeof(float));
   tmp = print_dtime(tmp, "initialize C");
 
   fill_random(A, A_rows, A_cols);

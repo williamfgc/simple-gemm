@@ -2,6 +2,7 @@
 
 EXECUTABLE=../../python/GemmDenseThreads.py
 
+# maximum theoretical = 206559 
 M=16384
 threads=( 80 70 60 50 40 30 20 10 5 2 1 )
 
