@@ -35,12 +35,12 @@ subroutine gemm (A, B, C, ierr)
 end subroutine
 
 function print_dtime(start, hint, ierr)
-    integer(kind=4), intent(out) :: start
+    integer(kind=8), intent(out) :: start
     character(*), intent(in) ::  hint
     integer(kind=4), intent(out) :: ierr
     ! local
-    integer(kind=4) :: rate
-    integer(kind=4) :: print_dtime
+    integer(kind=8) :: rate
+    integer(kind=8) :: print_dtime
     
     call system_clock(print_dtime, rate)
     write(*,'(A10,A15,A3,F15.5,A3)') 'Time to ', trim(hint), ' = ', real(print_dtime-start)/real(rate), ' s'
@@ -81,7 +81,7 @@ program main
     real(kind=4), dimension(:,:), allocatable:: A, B, C
     integer(kind=4) :: ierr
     ! timing variables
-    integer(kind=4) start, tmp, rate
+    integer(kind=8) start, tmp, rate
 
     ! Fortran 2003 standard
     if ( command_argument_count() /= 3 ) then 

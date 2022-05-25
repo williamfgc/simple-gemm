@@ -2,7 +2,8 @@
 FC=gfortran
 FC_FLAGS=-O3 -Wall -march=native
 # Wombat
-# FC_FLAGS=-O3 -Wall -mcpu=neoverse-v1
+# CC_FLAGS=-O3 -fopenmp 
+# CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 
 ifeq ($(FC),ifort)
 OMP_FLAG=-openmp

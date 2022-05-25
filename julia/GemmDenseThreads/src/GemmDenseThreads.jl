@@ -51,23 +51,26 @@ function main(args::Array{String,1})::Int32
     end
 
     # Julia is column-based (like Fortran)
-    print("Time to allocate A ")
-    @time A = Array{Float32,2}(undef, A_rows, A_cols)
-    print("Time to allocate B ")
-    @time B = Array{Float32,2}(undef, B_rows, B_cols)
-    print("Time to initialize C ")
-    @time C = zeros(Float32, A_rows, B_cols)
+    @time begin
 
-    print("Time to fill A ")
-    @time Random.rand!(A)
-    print("Time to fill B ")
-    @time Random.rand!(B)
+        print("Time to allocate A ")
+        @time A = Array{Float32,2}(undef, A_rows, A_cols)
+        print("Time to allocate B ")
+        @time B = Array{Float32,2}(undef, B_rows, B_cols)
+        print("Time to initialize C ")
+        @time C = zeros(Float32, A_rows, B_cols)
 
-    print("Time to simple gemm ")
-    @time gemm!(A, B, C)
+        print("Time to fill A ")
+        @time Random.rand!(A)
+        print("Time to fill B ")
+        @time Random.rand!(B)
 
-    # println(C)
+        print("Time to simple gemm ")
+        @time gemm!(A, B, C)
 
+        # println(C)
+        print("Time to total time ")
+    end
     return 0
 
 end

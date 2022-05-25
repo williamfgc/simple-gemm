@@ -2,7 +2,8 @@
 CC=clang
 CC_FLAGS=-O3 -march=native -fopenmp
 # Wombat
-# CC_FLAGS=-O3 -march=native -fopenmp -mcpu=neoverse-v1
+# CC_FLAGS=-O3 -fopenmp 
+# CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 
 ifneq (,$(findstring clang,$(CC)))
 all: clang
