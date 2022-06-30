@@ -34,20 +34,30 @@ function main(args::Array{String,1})::Int32
     B_rows::Int64 = -1
     B_cols::Int64 = -1
 
+    steps::Int32 = 1
+
     @show args
 
     # args don't include Julia executable and program
-    if size(args)[1] != 3
-        throw(
-            ArgumentError(
-                "Usage: 3 arguments: matrix A rows, matrix A cols and matrix B cols",
-            ),
-        )
-    else
+    nargs = size(args)[1]
+
+    if nargs == 4 || nargs == 3
         A_rows = parse(Int64, args[1])
         A_cols = parse(Int64, args[2])
         B_rows = parse(Int64, args[2])
         B_cols = parse(Int64, args[3])
+
+        if nargs == 4
+            steps = parse(Int32, args[4])
+        end
+    else
+        throw(
+            ArgumentError(
+                "Usage: \n
+                  - 3 arguments: matrix A rows, matrix A cols and matrix B cols\n
+                  - 4 arguments: matrix A rows, matrix A cols and matrix B cols, steps",
+            ),
+        )
     end
 
     # Julia is column-based (like Fortran)
@@ -65,8 +75,10 @@ function main(args::Array{String,1})::Int32
         print("Time to fill B ")
         @time Random.rand!(B)
 
-        print("Time to simple gemm ")
-        @time gemm!(A, B, C)
+        for i = 1:steps
+            print("Time to simple gemm ")
+            @time gemm!(A, B, C)
+        end
 
         # println(C)
         print("Time to total time ")

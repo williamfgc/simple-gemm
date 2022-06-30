@@ -31,6 +31,6 @@ end
     @test @time GemmDenseThreads.main(["10", "10", "10"]) == 0
     @test @time GemmDenseThreads.main(["100", "100", "100"]) == 0
     @test @time GemmDenseThreads.main(["1000", "1000", "1000"]) == 0
-    @test @time GemmDenseThreads.main(["10000", "10000", "10000"]) == 0
+    @test @time GemmDenseThreads.main(["2000", "2000", "2000"]) == 0
 
 end

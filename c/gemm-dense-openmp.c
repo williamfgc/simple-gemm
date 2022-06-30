@@ -64,16 +64,25 @@ int main(int argc, char *argv[]) {
   srand((unsigned int)time(&t));
 
   int64_t A_rows, A_cols, B_rows, B_cols;
+  int32_t steps = 1;
 
-  if (argc != 4) {
-    printf(
-        "Usage: 3 arguments: matrix A rows, matrix A cols and matrix B cols\n");
-    return 1;
-  } else {
+  if (argc == 5) {
     A_rows = atoll(argv[1]);
     A_cols = atoll(argv[2]);
     B_rows = atoll(argv[2]);
     B_cols = atoll(argv[3]);
+    steps = atoll(argv[4]);
+  } else if (argc == 4) {
+    A_rows = atoll(argv[1]);
+    A_cols = atoll(argv[2]);
+    B_rows = atoll(argv[2]);
+    B_cols = atoll(argv[3]);
+  } else {
+    printf("Usage: \n"
+           "- 3 arguments: matrix A rows, matrix A cols and matrix B cols\n"
+           "- 4 arguments: matrix A rows, matrix A cols and matrix B cols, "
+           "steps\n");
+    return 1;
   }
 
   printf("[ %ld %ld %ld ]\n", A_rows, A_cols, B_cols);
@@ -97,8 +106,11 @@ int main(int argc, char *argv[]) {
   fill_random(B, B_rows, B_cols);
   tmp = print_dtime(tmp, "fill B");
 
-  gemm(A, B, C, A_rows, A_cols, B_cols);
-  tmp = print_dtime(tmp, "simple gemm");
+  int32_t i;
+  for (i = 0; i < steps; ++i) {
+    gemm(A, B, C, A_rows, A_cols, B_cols);
+    tmp = print_dtime(tmp, "simple gemm");
+  }
 
   print_dtime(start, "total time");
 
