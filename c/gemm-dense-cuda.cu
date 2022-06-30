@@ -119,8 +119,12 @@ int main(int argc, char *argv[]) {
   dim3 dimGrid(grid_cols, grid_rows);
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 
+  int32_t i;
+  for (i = 0; i < steps; ++i) {
   gemm <<<dimGrid, dimBlock>>>( A_d, B_d, C_d, A_rows, A_cols, B_cols);
   tmp = print_dtime(tmp, "simple gemm");
+  }
+  
 
   cudaMemcpy(C_h, C_d, sizeof(float)*A_rows*B_cols, cudaMemcpuDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
