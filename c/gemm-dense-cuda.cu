@@ -15,22 +15,19 @@ static void fill_random(float *A, const int64_t n, const int64_t m) {
   }
 }
 
-__global__ 
-void gemm(float *A, float *B, float *C, const int64_t A_rows,
+__global__ void gemm(float *A, float *B, float *C, const int64_t A_rows,
                      const int64_t A_cols, const int64_t B_cols) {
 
-    int row = blockIdx.y * blockDim.y + threadIdx.y; 
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    float sum = 0.0f;
-    if( col < k && row < m) 
-    {
-        for(int i = 0; i < n; i++) 
-        {
-            sum += A[row * n + i] * B[i * k + col];
-        }
-        C[row * k + col] = sum;
+  int row = blockIdx.y * blockDim.y + threadIdx.y;
+  int col = blockIdx.x * blockDim.x + threadIdx.x;
+  float sum = 0.0f;
+  int i;
+  if (col < B_cols && row < A_rows) {
+    for (i = 0; i < A_cols; ++i) {
+      sum += A[row * A_cols + i] * B[i * B_cols + col];
     }
-
+    C[row * B_cols + col] = sum;
+  }
 }
 
 static struct timespec print_dtime(struct timespec start, const char *process) {
@@ -63,16 +60,25 @@ int main(int argc, char *argv[]) {
   srand((unsigned int)time(&t));
 
   int64_t A_rows, A_cols, B_rows, B_cols;
+  int32_t steps = 1;
 
-  if (argc != 4) {
-    printf(
-        "Usage: 3 arguments: matrix A rows, matrix A cols and matrix B cols\n");
-    return 1;
-  } else {
+  if (argc == 5) {
     A_rows = atoll(argv[1]);
     A_cols = atoll(argv[2]);
     B_rows = atoll(argv[2]);
     B_cols = atoll(argv[3]);
+    steps = atoll(argv[4]);
+  } else if (argc == 4) {
+    A_rows = atoll(argv[1]);
+    A_cols = atoll(argv[2]);
+    B_rows = atoll(argv[2]);
+    B_cols = atoll(argv[3]);
+  } else {
+    printf("Usage: \n"
+           "- 3 arguments: matrix A rows, matrix A cols and matrix B cols\n"
+           "- 4 arguments: matrix A rows, matrix A cols and matrix B cols, "
+           "steps\n");
+    return 1;
   }
 
   printf("[ %ld %ld %ld ]\n", A_rows, A_cols, B_cols);
@@ -80,17 +86,15 @@ int main(int argc, char *argv[]) {
   struct timespec start, tmp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  float* A_h, B_h, C_h;
-  
-  cudaMallocHost( ( void**) &A_h, sizeof(float) * A_rows * A_cols);
+  float *A_h = (float *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(float));
   tmp = print_dtime(start, "allocate A");
 
-  cudaMallocHost( ( void**) &B_h, sizeof(float) * B_rows * B_cols);
+  float *B_h = (float *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(float));
   tmp = print_dtime(tmp, "allocate B");
 
-  cudaMallocHost( ( void**) &C_h, sizeof(float) * A_rows * B_cols);
-  tmp = print_dtime(tmp, "allocate C"); 
-  
+  float *C_h = (float *)malloc((size_t)A_rows * (size_t)B_cols * sizeof(float));
+  tmp = print_dtime(tmp, "allocate C");
+
   // value-init to zero
   fill_random(A_h, A_rows, A_cols);
   tmp = print_dtime(tmp, "fill A");
@@ -98,22 +102,21 @@ int main(int argc, char *argv[]) {
   fill_random(B_h, B_rows, B_cols);
   tmp = print_dtime(tmp, "fill B");
 
-  
   // Allocate memory space on the device
-  double *A_d, *B_d, *C_d;
-  cudaMalloc((void **) &A_d, sizeof(float) * A_rows * A_cols );
+  float *A_d, *B_d, *C_d;
+  cudaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols);
   tmp = print_dtime(tmp, "allocate A_d");
-  cudaMalloc((void **) &B_d, sizeof(float) * B_rows * B_cols );
+  cudaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols);
   tmp = print_dtime(tmp, "allocate B_d");
-  cudaMalloc((void **) &C_d, sizeof(float) * A_rows * B_cols );
+  cudaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols);
   tmp = print_dtime(tmp, "allocate C_d");
 
-  cudaMemcpy(A_d, A_h, sizeof(float)*A_rows*A_cols, cudaMemcpuHostToDevice);
+  cudaMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, cudaMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy A");
 
-  cudaMemcpy(B_d, B_h, sizeof(float)*B_rows*B_cols, cudaMemcpuHostToDevice);
+  cudaMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, cudaMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy B");
- 
+
   unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
   unsigned int grid_cols = (B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE;
   dim3 dimGrid(grid_cols, grid_rows);
@@ -121,13 +124,16 @@ int main(int argc, char *argv[]) {
 
   int32_t i;
   for (i = 0; i < steps; ++i) {
-  gemm <<<dimGrid, dimBlock>>>( A_d, B_d, C_d, A_rows, A_cols, B_cols);
-  tmp = print_dtime(tmp, "simple gemm");
+    gemm<<<dimGrid, dimBlock>>>(A_d, B_d, C_d, A_rows, A_cols, B_cols);
+    tmp = print_dtime(tmp, "simple gemm");
   }
-  
 
-  cudaMemcpy(C_h, C_d, sizeof(float)*A_rows*B_cols, cudaMemcpuDeviceToHost);
+  cudaMemcpy(C_d, C_h, sizeof(float) * A_rows * B_cols, cudaMemcpyDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
+
+  print_matrix(A_h, A_rows, A_cols);
+  print_matrix(B_h, B_rows, B_cols);
+  print_matrix(C_h, A_rows, B_cols);
 
   print_dtime(start, "total time");
 
