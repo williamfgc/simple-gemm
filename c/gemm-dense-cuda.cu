@@ -15,13 +15,14 @@ static void fill_random(float *A, const int64_t n, const int64_t m) {
   }
 }
 
-__global__ void gemm(float *A, float *B, float *C, const int64_t A_rows,
-                     const int64_t A_cols, const int64_t B_cols) {
+__global__ void gemm(float *A, float *B, float *C, int64_t A_rows,
+                     int64_t A_cols, int64_t B_cols) {
 
   int row = blockIdx.y * blockDim.y + threadIdx.y;
   int col = blockIdx.x * blockDim.x + threadIdx.x;
   float sum = 0.0f;
   int i;
+
   if (col < B_cols && row < A_rows) {
     for (i = 0; i < A_cols; ++i) {
       sum += A[row * A_cols + i] * B[i * B_cols + col];
@@ -104,11 +105,22 @@ int main(int argc, char *argv[]) {
 
   // Allocate memory space on the device
   float *A_d, *B_d, *C_d;
-  cudaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols);
+  if (cudaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
+    printf("A_d allocation failure\n");
+    exit(1); // leaky exit
+  }
   tmp = print_dtime(tmp, "allocate A_d");
-  cudaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols);
+
+  if (cudaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
+    printf("B_d allocation failure\n");
+    exit(1); // leaky exit
+  }
   tmp = print_dtime(tmp, "allocate B_d");
-  cudaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols);
+
+  if (cudaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
+    printf("C_d allocation failure\n");
+    exit(1); // leaky exit
+  }
   tmp = print_dtime(tmp, "allocate C_d");
 
   cudaMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, cudaMemcpyHostToDevice);
@@ -119,21 +131,23 @@ int main(int argc, char *argv[]) {
 
   unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
   unsigned int grid_cols = (B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
   dim3 dimGrid(grid_cols, grid_rows);
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 
   int32_t i;
   for (i = 0; i < steps; ++i) {
     gemm<<<dimGrid, dimBlock>>>(A_d, B_d, C_d, A_rows, A_cols, B_cols);
+    cudaDeviceSynchronize();
     tmp = print_dtime(tmp, "simple gemm");
   }
 
-  cudaMemcpy(C_d, C_h, sizeof(float) * A_rows * B_cols, cudaMemcpyDeviceToHost);
+  cudaMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, cudaMemcpyDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
 
-  print_matrix(A_h, A_rows, A_cols);
-  print_matrix(B_h, B_rows, B_cols);
-  print_matrix(C_h, A_rows, B_cols);
+  // print_matrix(A_h, A_rows, A_cols);
+  // print_matrix(B_h, B_rows, B_cols);
+  // print_matrix(C_h, A_rows, B_cols);
 
   print_dtime(start, "total time");
 
