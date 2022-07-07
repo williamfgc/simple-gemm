@@ -40,6 +40,7 @@ Manifest.toml
 *.out
 *.err
 *.log
+*.so
 
 
 
