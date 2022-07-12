@@ -1,0 +1,7 @@
+name = "GemmDenseCUBLAS"
+uuid = "a841c956-33f4-4141-9038-b9998bd522f8"
+authors = ["William F Godoy <williamfgc@yahoo.com>"]
+version = "0.1.0"
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
