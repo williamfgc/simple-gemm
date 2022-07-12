@@ -19,7 +19,61 @@ import GemmDenseCUDA
         threads_y = min(max_threads ÷ threads_x, size(C, 2))
         threads = (threads_x, threads_y)
         blocks = ceil.(Int, (size(C, 1), size(C, 2)) ./ threads)
-        CUDA.@cuda threads = threads blocks = blocks GemmDenseCUDA.gemm(A, B, C)
+        CUDA.@cuda threads = threads blocks = blocks GemmDenseCUDA.gemm!(
+            A,
+            B,
+            C,
+        )
+        CUDA.synchronize()
+
+        C_expected = Array(A) * Array(B)
+        @test isapprox(C_expected, Array(C))
+        return
+    end
+
+    function test_gemm64(A_rows, A_cols, B_cols)
+        B_rows = A_cols
+        A = CUDA.CuArray{Float64,2}(undef, A_rows, A_cols)
+        B = CUDA.CuArray{Float64,2}(undef, B_rows, B_cols)
+        C = CUDA.zeros(Float64, A_rows, B_cols)
+        CUDA.rand!(A)
+        CUDA.rand!(B)
+
+        max_threads = 16
+        threads_x = min(max_threads, size(C, 1))
+        threads_y = min(max_threads ÷ threads_x, size(C, 2))
+        threads = (threads_x, threads_y)
+        blocks = ceil.(Int, (size(C, 1), size(C, 2)) ./ threads)
+        CUDA.@cuda threads = threads blocks = blocks GemmDenseCUDA.gemm64!(
+            A,
+            B,
+            C,
+        )
+        CUDA.synchronize()
+
+        C_expected = Array(A) * Array(B)
+        @test isapprox(C_expected, Array(C))
+        return
+    end
+
+    function test_gemm16(A_rows, A_cols, B_cols)
+        B_rows = A_cols
+        A = CUDA.CuArray{Float16,2}(undef, A_rows, A_cols)
+        B = CUDA.CuArray{Float16,2}(undef, B_rows, B_cols)
+        C = CUDA.zeros(Float32, A_rows, B_cols)
+        CUDA.rand!(A)
+        CUDA.rand!(B)
+
+        max_threads = 16
+        threads_x = min(max_threads, size(C, 1))
+        threads_y = min(max_threads ÷ threads_x, size(C, 2))
+        threads = (threads_x, threads_y)
+        blocks = ceil.(Int, (size(C, 1), size(C, 2)) ./ threads)
+        CUDA.@cuda threads = threads blocks = blocks GemmDenseCUDA.gemm16!(
+            A,
+            B,
+            C,
+        )
         CUDA.synchronize()
 
         C_expected = Array(A) * Array(B)
@@ -31,6 +85,16 @@ import GemmDenseCUDA
     test_gemm(5, 10, 5)
     test_gemm(2, 4, 6)
     test_gemm(10, 10, 10)
+
+    test_gemm64(5, 5, 5)
+    test_gemm64(5, 10, 5)
+    test_gemm64(2, 4, 6)
+    test_gemm64(10, 10, 10)
+
+    test_gemm16(5, 5, 5)
+    test_gemm16(5, 10, 5)
+    test_gemm16(2, 4, 6)
+    test_gemm16(10, 10, 10)
 
 end
 

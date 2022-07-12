@@ -45,6 +45,12 @@ static struct timespec print_dtime(struct timespec start, const char *process) {
   return end;
 }
 
+static float dtime(struct timespec start, struct timespec end) {
+  return ((float)((end.tv_sec - start.tv_sec) * 1000000 +
+                  (end.tv_nsec - start.tv_nsec) / 1000)) /
+         1E6;
+}
+
 static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
 
   int64_t i, j;
@@ -66,17 +72,14 @@ int main(int argc, char *argv[]) {
   int64_t A_rows, A_cols, B_rows, B_cols;
   int32_t steps = 1;
 
-  if (argc == 5) {
+  if (argc == 5 || argc == 4) {
     A_rows = atoll(argv[1]);
     A_cols = atoll(argv[2]);
     B_rows = atoll(argv[2]);
     B_cols = atoll(argv[3]);
-    steps = atoll(argv[4]);
-  } else if (argc == 4) {
-    A_rows = atoll(argv[1]);
-    A_cols = atoll(argv[2]);
-    B_rows = atoll(argv[2]);
-    B_cols = atoll(argv[3]);
+    if (argc == 5) {
+      steps = atoll(argv[4]);
+    }
   } else {
     printf("Usage: \n"
            "- 3 arguments: matrix A rows, matrix A cols and matrix B cols\n"
@@ -107,9 +110,24 @@ int main(int argc, char *argv[]) {
   tmp = print_dtime(tmp, "fill B");
 
   int32_t i;
-  for (i = 0; i < steps; ++i) {
-    gemm(A, B, C, A_rows, A_cols, B_cols);
-    tmp = print_dtime(tmp, "simple gemm");
+  gemm(A, B, C, A_rows, A_cols, B_cols);
+  tmp = print_dtime(tmp, "simple gemm");
+
+  if (steps > 1) {
+
+    float average_time = 0;
+    struct timespec start_i, end_i;
+
+    for (i = 1; i < steps; ++i) {
+      clock_gettime(CLOCK_MONOTONIC_RAW, &start_i);
+      gemm(A, B, C, A_rows, A_cols, B_cols);
+      end_i = print_dtime(start_i, "simple gemm");
+      average_time += dtime(start_i, end_i);
+    }
+    average_time /= (steps - 1);
+    const double gflops =
+        (double)((2 * A_rows * A_cols * B_cols * 1E-9) / average_time);
+    printf("GFLOPS: %lf  steps: %d ", gflops, steps);
   }
 
   print_dtime(start, "total time");

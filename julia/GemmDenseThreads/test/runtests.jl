@@ -18,10 +18,44 @@ import GemmDenseThreads
         return isapprox(C_expected, C)
     end
 
+    function test_gemm64(A_rows, A_cols, B_cols)::Bool
+        B_rows = A_cols
+        A = Array{Float64,2}(undef, A_rows, A_cols)
+        B = Array{Float64,2}(undef, B_rows, B_cols)
+        C = zeros(Float64, A_rows, B_cols)
+        Random.rand!(A)
+        Random.rand!(B)
+        GemmDenseThreads.gemm64!(A, B, C)
+        C_expected = A * B
+        return isapprox(C_expected, C)
+    end
+
+    function test_gemm16(A_rows, A_cols, B_cols)::Bool
+        B_rows = A_cols
+        A = Array{Float16,2}(undef, A_rows, A_cols)
+        B = Array{Float16,2}(undef, B_rows, B_cols)
+        C = zeros(Float32, A_rows, B_cols)
+        Random.rand!(A)
+        Random.rand!(B)
+        GemmDenseThreads.gemm16!(A, B, C)
+        C_expected = A * B
+        return isapprox(C_expected, C)
+    end
+
     @test test_gemm(5, 5, 5)
     @test test_gemm(5, 10, 5)
     @test test_gemm(2, 4, 6)
     @test test_gemm(10, 10, 10)
+
+    @test test_gemm64(5, 5, 5)
+    @test test_gemm64(5, 10, 5)
+    @test test_gemm64(2, 4, 6)
+    @test test_gemm64(10, 10, 10)
+
+    @test test_gemm16(5, 5, 5)
+    @test test_gemm16(5, 10, 5)
+    @test test_gemm16(2, 4, 6)
+    @test test_gemm16(10, 10, 10)
 
 end
 
