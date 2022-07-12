@@ -4,29 +4,7 @@ import CUDA
 
 BLOCK_SIZE = 32
 
-function gemm(
-    A::CUDA.CuDeviceMatrix{Float16,1},
-    B::CUDA.CuDeviceMatrix{Float16,1},
-    C::CUDA.CuDeviceMatrix{Float16,1},
-)
-    row = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
-    col = (CUDA.blockIdx().y - 1) * CUDA.blockDim().y + CUDA.threadIdx().y
-
-    sum = Float32(0.0)
-
-    if row <= size(A, 1) && col <= size(B, 2)
-
-        for i = 1:size(A, 2)
-            @inbounds sum += A[row, i] * B[i, col]
-        end
-        C[row, col] = convert(Float16, sum)
-    end
-
-    return
-end
-
-
-function gemm(
+function gemm!(
     A::CUDA.CuDeviceMatrix{Float32,1},
     B::CUDA.CuDeviceMatrix{Float32,1},
     C::CUDA.CuDeviceMatrix{Float32,1},
@@ -48,7 +26,31 @@ function gemm(
     return
 end
 
-function gemm(
+function gemm16!(
+    A::CUDA.CuDeviceMatrix{Float16,1},
+    B::CUDA.CuDeviceMatrix{Float16,1},
+    C::CUDA.CuDeviceMatrix{Float32,1},
+)
+    row = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
+    col = (CUDA.blockIdx().y - 1) * CUDA.blockDim().y + CUDA.threadIdx().y
+
+    sum = Float32(0.0)
+
+    if row <= size(A, 1) && col <= size(B, 2)
+
+        for i = 1:size(A, 2)
+            @inbounds sum += A[row, i] * B[i, col]
+        end
+        C[row, col] = sum
+    end
+
+    return
+end
+
+
+
+
+function gemm64!(
     A::CUDA.CuDeviceMatrix{Float64,1},
     B::CUDA.CuDeviceMatrix{Float64,1},
     C::CUDA.CuDeviceMatrix{Float64,1},
@@ -130,12 +132,27 @@ function main(args::Array{String,1})::Int32
         # println("Threads: ", threads)
         # println("Blocks: ", blocks)
 
-        for i = 1:steps
-            print("Time to simple gemm")
-            @time begin
-                CUDA.@cuda threads = threads blocks = blocks gemm(A, B, C)
-                CUDA.synchronize()
+        print("Time to simple gemm ")
+        @time begin
+            CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
+            CUDA.synchronize()
+        end
+
+        if steps > 1
+            timings = zeros(steps)
+            for i = 2:steps
+                print("Time to simple gemm ")
+                timings[i] = @elapsed begin
+                    CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
+                    CUDA.synchronize()
+                end
+
+                println(timings[i])
             end
+
+            average_time = sum(timings) / (steps - 1)
+            gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
+            println("GFLOPS: ", gflops, " steps: ", steps)
         end
 
         print("Time to total time ")
@@ -203,13 +220,29 @@ function main64(args::Array{String,1})::Int32
         # println("Threads: ", threads)
         # println("Blocks: ", blocks)
 
-        for i = 1:steps
-            print("Time to simple gemm")
-            @time begin
-                CUDA.@cuda threads = threads blocks = blocks gemm(A, B, C)
-                CUDA.synchronize()
-            end
+        print("Time to simple gemm ")
+        @time begin
+            CUDA.@cuda threads = threads blocks = blocks gemm64!(A, B, C)
+            CUDA.synchronize()
         end
+
+        if steps > 1
+            timings = zeros(steps)
+            for i = 2:steps
+                print("Time to simple gemm ")
+                timings[i] = @elapsed begin
+                    CUDA.@cuda threads = threads blocks = blocks gemm64!(A, B, C)
+                    CUDA.synchronize()
+                end
+
+                println(timings[i])
+            end
+
+            average_time = sum(timings) / (steps - 1)
+            gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
+            println("GFLOPS: ", gflops, " steps: ", steps)
+        end
+
 
         print("Time to total time ")
     end
@@ -261,7 +294,7 @@ function main16(args::Array{String,1})::Int32
         @time B = CUDA.CuArray{Float16,2}(undef, B_rows, B_cols)
 
         print("Time to initialize C")
-        @time C = CUDA.zeros(Float16, A_rows, B_cols)
+        @time C = CUDA.zeros(Float32, A_rows, B_cols)
 
         print("Time to fill A")
         @time CUDA.rand!(A)
@@ -276,12 +309,27 @@ function main16(args::Array{String,1})::Int32
         # println("Threads: ", threads)
         # println("Blocks: ", blocks)
 
-        for i = 1:steps
-            print("Time to simple gemm")
-            @time begin
-                CUDA.@cuda threads = threads blocks = blocks gemm(A, B, C)
-                CUDA.synchronize()
+        print("Time to simple gemm ")
+        @time begin
+            CUDA.@cuda threads = threads blocks = blocks gemm16!(A, B, C)
+            CUDA.synchronize()
+        end
+
+        if steps > 1
+            timings = zeros(steps)
+            for i = 2:steps
+                print("Time to simple gemm ")
+                timings[i] = @elapsed begin
+                    CUDA.@cuda threads = threads blocks = blocks gemm16!(A, B, C)
+                    CUDA.synchronize()
+                end
+
+                println(timings[i])
             end
+
+            average_time = sum(timings) / (steps - 1)
+            gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
+            println("GFLOPS: ", gflops, " steps: ", steps)
         end
 
         print("Time to total time ")
