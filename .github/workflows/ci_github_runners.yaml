@@ -29,9 +29,9 @@ jobs:
 
   - name: Instantiate
     run: |
-     echo $GITHUB_WORKSPACE
-     cd $GITHUB_WORKSPACE
+     echo $GITHUB_WORKSPACE/julia/GemmDenseThreads
+     cd $GITHUB_WORKSPACE/julia/GemmDenseThreads
      julia --project  -e 'using Pkg; Pkg.instantiate();'
 
   - name: Test
-    run: julia --project test/runtest.jl
+    run: jjulia -t 2 --project test/runtest.jl
