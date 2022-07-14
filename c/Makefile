@@ -20,6 +20,9 @@ endif
 hip: gemm-dense-hip.c
 	hipcc -O3 gemm-dense-hip.c -o gemm-dense-hip
 
+cuda64: gemm-dense-cuda.cu
+	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda64.cu -o gemm-dense-cuda64
+
 cuda: gemm-dense-cuda.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda.cu -o gemm-dense-cuda
 
@@ -34,4 +37,4 @@ clang: gemm_dense_common
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-hip
+	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-cuda64 gemm-dense-hip gemm-dense-hip64

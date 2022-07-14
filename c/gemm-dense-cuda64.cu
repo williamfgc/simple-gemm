@@ -5,22 +5,22 @@
 
 static int BLOCK_SIZE = 32;
 
-static void fill_random(float *A, const int64_t n, const int64_t m) {
+static void fill_random(double *A, const int64_t n, const int64_t m) {
 
   int64_t i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
-      A[i * m + j] = (float)rand() / (float)RAND_MAX;
+      A[i * m + j] = (double)rand() / (double)RAND_MAX;
     }
   }
 }
 
-__global__ void gemm(float *A, float *B, float *C, int64_t A_rows,
+__global__ void gemm(double *A, double *B, double *C, int64_t A_rows,
                      int64_t A_cols, int64_t B_cols) {
 
   int row = blockIdx.y * blockDim.y + threadIdx.y;
   int col = blockIdx.x * blockDim.x + threadIdx.x;
-  float sum = 0.0f;
+  double sum = 0.0f;
   int i;
 
   if (col < B_cols && row < A_rows) {
@@ -34,15 +34,16 @@ __global__ void gemm(float *A, float *B, float *C, int64_t A_rows,
 static struct timespec print_dtime(struct timespec start, const char *process) {
   struct timespec end;
   clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-  const float dtime = ((float)((end.tv_sec - start.tv_sec) * 1000000 +
-                               (end.tv_nsec - start.tv_nsec) / 1000)) /
-                      1E6;
+  const double dtime = ((double)((end.tv_sec - start.tv_sec) * 1000000 +
+                                 (end.tv_nsec - start.tv_nsec) / 1000)) /
+                       1E6;
 
   printf("Time to %s = %f s\n", process, dtime);
   return end;
 }
 
-static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
+static void print_matrix(double *A, const int64_t A_rows,
+                         const int64_t A_cols) {
 
   int64_t i, j;
   printf("[");
@@ -54,9 +55,9 @@ static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
   printf("]\n");
 }
 
-static float dtime(struct timespec start, struct timespec end) {
-  return ((float)((end.tv_sec - start.tv_sec) * 1000000 +
-                  (end.tv_nsec - start.tv_nsec) / 1000)) /
+static double dtime(struct timespec start, struct timespec end) {
+  return ((double)((end.tv_sec - start.tv_sec) * 1000000 +
+                   (end.tv_nsec - start.tv_nsec) / 1000)) /
          1E6;
 }
 
@@ -90,13 +91,16 @@ int main(int argc, char *argv[]) {
   struct timespec start, tmp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  float *A_h = (float *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(float));
+  double *A_h =
+      (double *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(double));
   tmp = print_dtime(start, "allocate A");
 
-  float *B_h = (float *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(float));
+  double *B_h =
+      (double *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(double));
   tmp = print_dtime(tmp, "allocate B");
 
-  float *C_h = (float *)malloc((size_t)A_rows * (size_t)B_cols * sizeof(float));
+  double *C_h =
+      (double *)malloc((size_t)A_rows * (size_t)B_cols * sizeof(double));
   tmp = print_dtime(tmp, "allocate C");
 
   // value-init to zero
@@ -107,29 +111,31 @@ int main(int argc, char *argv[]) {
   tmp = print_dtime(tmp, "fill B");
 
   // Allocate memory space on the device
-  float *A_d, *B_d, *C_d;
-  if (cudaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
+  double *A_d, *B_d, *C_d;
+  if (cudaMalloc((void **)&A_d, sizeof(double) * A_rows * A_cols)) {
     printf("A_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate A_d");
 
-  if (cudaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
+  if (cudaMalloc((void **)&B_d, sizeof(double) * B_rows * B_cols)) {
     printf("B_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate B_d");
 
-  if (cudaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
+  if (cudaMalloc((void **)&C_d, sizeof(double) * A_rows * B_cols)) {
     printf("C_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate C_d");
 
-  cudaMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, cudaMemcpyHostToDevice);
+  cudaMemcpy(A_d, A_h, sizeof(double) * A_rows * A_cols,
+             cudaMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy A");
 
-  cudaMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, cudaMemcpyHostToDevice);
+  cudaMemcpy(B_d, B_h, sizeof(double) * B_rows * B_cols,
+             cudaMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy B");
 
   unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -145,7 +151,7 @@ int main(int argc, char *argv[]) {
 
   if (steps > 1) {
 
-    float average_time = 0;
+    double average_time = 0;
     struct timespec start_i, end_i;
 
     for (i = 1; i < steps; ++i) {
@@ -162,7 +168,8 @@ int main(int argc, char *argv[]) {
            average_time);
   }
 
-  cudaMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, cudaMemcpyDeviceToHost);
+  cudaMemcpy(C_h, C_d, sizeof(double) * A_rows * B_cols,
+             cudaMemcpyDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
 
   // print_matrix(A_h, A_rows, A_cols);

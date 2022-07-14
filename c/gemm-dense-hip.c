@@ -164,7 +164,8 @@ int main(int argc, char *argv[]) {
     average_time /= (steps - 1);
     const double gflops =
         (double)((2 * A_rows * A_cols * B_cols * 1E-9) / average_time);
-    printf("GFLOPS: %lf  steps: %d ", gflops, steps);
+    printf("GFLOPS: %lf  steps: %d average_time: %f\n", gflops, steps,
+           average_time);
   }
 
   hipMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, hipMemcpyDeviceToHost);
