@@ -17,8 +17,11 @@ endif
 
 .PHONY: gemm_dense_common
 
-hip: gemm-dense-hip.c
-	hipcc -O3 gemm-dense-hip.c -o gemm-dense-hip
+hip: gemm-dense-hip.cpp
+	hipcc -O3 gemm-dense-hip.cpp -o gemm-dense-hip
+
+hip64: gemm-dense-hip.cpp
+	hipcc -O3 gemm-dense-hip64.cpp -o gemm-dense-hip
 
 cuda64: gemm-dense-cuda.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda64.cu -o gemm-dense-cuda64
