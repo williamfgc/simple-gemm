@@ -44,5 +44,7 @@ Manifest.toml
 
 *-cuda
 *-hip
+*-cuda64
+*-hip64
 
 
