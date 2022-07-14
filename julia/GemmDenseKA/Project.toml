@@ -1,0 +1,7 @@
+name = "GemmDenseKA"
+uuid = "d7bf4403-595b-4ae8-9771-20a8fd8369f0"
+authors = ["William F Godoy <williamfgc@yahoo.com>"]
+version = "0.1.0"
+
+[deps]
+KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
