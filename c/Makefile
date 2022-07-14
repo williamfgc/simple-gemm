@@ -5,6 +5,7 @@ CC_FLAGS=-O3 -march=native -fopenmp
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 # CUDA select compute capability of your targeted hardware
+# Wombat CUDA_ARCH=80
 CUDA_ARCH=50
 
 
@@ -15,6 +16,9 @@ all: gemm_dense_common
 endif
 
 .PHONY: gemm_dense_common
+
+hip: gemm-dense-hip.c
+	hipcc -O3 gemm-dense-hip.c -o gemm-dense-hip
 
 cuda: gemm-dense-cuda.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda.cu -o gemm-dense-cuda
@@ -30,4 +34,4 @@ clang: gemm_dense_common
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda
+	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-hip
