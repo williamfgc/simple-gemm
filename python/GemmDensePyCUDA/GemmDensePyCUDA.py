@@ -1,23 +1,30 @@
 
 import sys
 import typing
-from numba import cuda
+from pycuda import driver, compiler, gpuarray, tools
 import numpy as np
 import time
 from math import ceil
 
 BLOCK_SIZE = 32
 
+kernel_gemm = """
+__global__ void gemm(float *A, float *B, float *C, int64_t A_rows,
+                     int64_t A_cols, int64_t B_cols) {
 
-@cuda.jit
-def gemm(A: np.ndarray, B: np.ndarray, C: np.ndarray):
+  int row = blockIdx.y * blockDim.y + threadIdx.y;
+  int col = blockIdx.x * blockDim.x + threadIdx.x;
+  float sum = 0.0f;
+  int i;
 
-    i, j = cuda.grid(2)
-    if i < C.shape[0] and j < C.shape[1]:
-        tmp = 0.
-        for k in range(A.shape[1]):
-            tmp += A[i, k] * B[k, j]
-        C[i, j] = tmp
+  if (col < B_cols && row < A_rows) {
+    for (i = 0; i < A_cols; ++i) {
+      sum += A[row * A_cols + i] * B[i * B_cols + col];
+    }
+    C[row * B_cols + col] = sum;
+  }
+}
+"""
 
 
 def _print_time(start, process: str):
@@ -59,7 +66,14 @@ def main():
     tmp = _print_time(start, "initialize A")
     B = rng.random((B_rows, B_cols), dtype=np.float32)
     tmp = _print_time(tmp, "initialize B")
-    C = np.zeros(dtype=np.float32, shape=(A_rows, B_cols))
+    # C = np.zeros(dtype=np.float32, shape=(A_rows, B_cols))
+    # tmp = _print_time(tmp, "initialize C")
+
+    A_d = gpuarray.to_gpu(A)
+    tmp = _print_time(tmp, "copy A")
+    B_d = gpuarray.to_gpu(B)
+    tmp = _print_time(tmp, "copy B")
+    C_d = gpuarray.empty((A_rows, B_cols), np.float32)
     tmp = _print_time(tmp, "initialize C")
 
     grid_rows = ceil((A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE)
@@ -67,8 +81,13 @@ def main():
     blocks = (grid_rows, grid_cols)
     threads = (BLOCK_SIZE, BLOCK_SIZE)
 
-    gemm[blocks, threads](A, B, C)
-    cuda.synchronize()
+    # compile the kernel code
+    mod = compiler.SourceModule(kernel_gemm)
+    gemm = mod.get_function("gemm")
+
+    # call the kernel
+    gemm(A_d, B_d, C_d, A_rows, B_rows, B_cols, block=blocks, threads=threads)
+    driver.Context.synchronize()
     tmp = _print_time(tmp, "simple gemm")
 
     if steps > 1:
@@ -76,8 +95,8 @@ def main():
         average_time = 0.
         for i in range(1, steps):
             start = time.time()
-            gemm[blocks, threads](A, B, C)
-            cuda.synchronize()
+            gemm(A_d, B_d, C_d, A_rows, B_rows, B_cols)
+            driver.Context.synchronize()
             end = time.time()
             print("Time to simple gemm : " + str(end-start) + " s")
             average_time += (end-start)
@@ -85,8 +104,7 @@ def main():
         average_time /= steps-1
         gflops = (2 * A_rows * A_cols * B_cols*1E-9)/average_time
 
-        print("GFLOPS: " + str(gflops) + " steps: " + str(steps) +
-              " average_time: " + str(average_time) + "\n")
+        print("GFLOPS: " + str(gflops) + " steps: " + str(steps) + "\n")
 
     tmp = _print_time(start, "total time")
 
