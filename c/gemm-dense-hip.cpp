@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "hip/hip_runtime.h"
+
 static int BLOCK_SIZE = 32;
 
 static void fill_random(float *A, const int64_t n, const int64_t m) {
@@ -108,28 +110,28 @@ int main(int argc, char *argv[]) {
 
   // Allocate memory space on the device
   float *A_d, *B_d, *C_d;
-  if (cudaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
+  if (hipMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
     printf("A_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate A_d");
 
-  if (cudaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
+  if (hipMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
     printf("B_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate B_d");
 
-  if (cudaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
+  if (hipMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
     printf("C_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate C_d");
 
-  cudaMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, cudaMemcpyHostToDevice);
+  hipMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy A");
 
-  cudaMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, cudaMemcpyHostToDevice);
+  hipMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy B");
 
   unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -139,8 +141,11 @@ int main(int argc, char *argv[]) {
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 
   int32_t i;
-  gemm<<<dimGrid, dimBlock>>>(A_d, B_d, C_d, A_rows, A_cols, B_cols);
-  cudaDeviceSynchronize();
+
+  // gemm<<<dimGrid, dimBlock>>>(A_d, B_d, C_d, A_rows, A_cols, B_cols);
+  hipLaunchKernelGGL(gemm, dimGrid, dimBlock, 0, 0, A_d, B_d, C_d, A_rows,
+                     A_cols, B_cols);
+  hipDeviceSynchronize();
   tmp = print_dtime(tmp, "simple gemm");
 
   if (steps > 1) {
@@ -150,8 +155,9 @@ int main(int argc, char *argv[]) {
 
     for (i = 1; i < steps; ++i) {
       clock_gettime(CLOCK_MONOTONIC_RAW, &start_i);
-      gemm<<<dimGrid, dimBlock>>>(A_d, B_d, C_d, A_rows, A_cols, B_cols);
-      cudaDeviceSynchronize();
+      hipLaunchKernelGGL(gemm, dimGrid, dimBlock, 0, 0, A_d, B_d, C_d, A_rows,
+                         A_cols, B_cols);
+      hipDeviceSynchronize();
       end_i = print_dtime(start_i, "simple gemm");
       average_time += dtime(start_i, end_i);
     }
@@ -162,7 +168,7 @@ int main(int argc, char *argv[]) {
            average_time);
   }
 
-  cudaMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, cudaMemcpyDeviceToHost);
+  hipMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, hipMemcpyDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
 
   // print_matrix(A_h, A_rows, A_cols);
@@ -171,9 +177,9 @@ int main(int argc, char *argv[]) {
 
   print_dtime(start, "total time");
 
-  cudaFree(A_d);
-  cudaFree(B_d);
-  cudaFree(C_d);
+  hipFree(A_d);
+  hipFree(B_d);
+  hipFree(C_d);
 
   free(A_h);
   free(B_h);

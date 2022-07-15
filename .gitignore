@@ -42,5 +42,9 @@ Manifest.toml
 *.log
 *.so
 
+*-cuda
+*-hip
+*-cuda64
+*-hip64
 
 

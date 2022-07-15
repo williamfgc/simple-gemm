@@ -35,7 +35,7 @@ function gemm64!(A, B, C)
         (AMDGPU.workgroupIdx().y - 1) * AMDGPU.workgroupDim().y +
         AMDGPU.workitemIdx().y
 
-    sum = Float64(0.0)
+    sum = zero(eltype(C))
 
     if row <= size(A, 1) && col <= size(B, 2)
 
@@ -121,36 +121,40 @@ function main(args::Array{String,1})::Int32
         print("Time to fill B")
         @time AMDGPU.rand!(B)
 
-        grid_rows::Int32 = ceil((A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        grid_cols::Int32 = ceil((B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        blocks = (grid_rows, grid_cols)
+        grid = (A_rows, B_cols)
         threads = (BLOCK_SIZE, BLOCK_SIZE)
-
-        # println("Threads: ", threads)
-        # println("Blocks: ", blocks)
 
         print("Time to simple gemm ")
         @time AMDGPU.wait(
-            AMDGPU.@roc groupsize = threads gridsize = blocks gemm!(A, B, C)
+            AMDGPU.@roc groupsize = threads gridsize = grid gemm!(A, B, C)
         )
 
         if steps > 1
             timings = zeros(steps)
             for i = 2:steps
                 print("Time to simple gemm ")
-                timings[i] = @elapsed AMDGPU.wait(
-                    AMDGPU.@roc groupsize = threads gridsize = blocks gemm!(
-                        A,
-                        B,
-                        C,
+                timings[i] = @elapsed begin
+                    AMDGPU.wait(
+                        AMDGPU.@roc groupsize = threads gridsize = grid gemm!(
+                            A,
+                            B,
+                            C,
+                        )
                     )
-                )
+                end
                 println(timings[i])
             end
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
         print("Time to total time ")
@@ -210,36 +214,40 @@ function main64(args::Array{String,1})::Int32
         print("Time to fill B")
         @time AMDGPU.rand!(B)
 
-        grid_rows::Int32 = ceil((A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        grid_cols::Int32 = ceil((B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        blocks = (grid_rows, grid_cols)
+        grid = (A_rows, B_cols)
         threads = (BLOCK_SIZE, BLOCK_SIZE)
-
-        # println("Threads: ", threads)
-        # println("Blocks: ", blocks)
 
         print("Time to simple gemm ")
         @time AMDGPU.wait(
-            AMDGPU.@roc groupsize = threads gridsize = blocks gemm64!(A, B, C)
+            AMDGPU.@roc groupsize = threads gridsize = grid gemm64!(A, B, C)
         )
 
         if steps > 1
             timings = zeros(steps)
             for i = 2:steps
                 print("Time to simple gemm ")
-                timings[i] = @elapsed AMDGPU.wait(
-                    AMDGPU.@roc groupsize = threads gridsize = blocks gemm64!(
-                        A,
-                        B,
-                        C,
+                timings[i] = @elapsed begin
+                    AMDGPU.wait(
+                        AMDGPU.@roc groupsize = threads gridsize = grid gemm64!(
+                            A,
+                            B,
+                            C,
+                        )
                     )
-                )
+                end
                 println(timings[i])
             end
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
         print("Time to total time ")
@@ -300,36 +308,40 @@ function main16(args::Array{String,1})::Int32
         print("Time to fill B")
         @time AMDGPU.rand!(B)
 
-        grid_rows::Int32 = ceil((A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        grid_cols::Int32 = ceil((B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        blocks = (grid_rows, grid_cols)
+        grid = (A_rows, B_cols)
         threads = (BLOCK_SIZE, BLOCK_SIZE)
-
-        # println("Threads: ", threads)
-        # println("Blocks: ", blocks)
 
         print("Time to simple gemm ")
         @time AMDGPU.wait(
-            AMDGPU.@roc groupsize = threads gridsize = blocks gemm16!(A, B, C)
+            AMDGPU.@roc groupsize = threads gridsize = grid gemm16!(A, B, C)
         )
 
         if steps > 1
             timings = zeros(steps)
             for i = 2:steps
                 print("Time to simple gemm ")
-                timings[i] = @elapsed AMDGPU.wait(
-                    AMDGPU.@roc groupsize = threads gridsize = blocks gemm16!(
-                        A,
-                        B,
-                        C,
+                timings[i] = @elapsed begin
+                    AMDGPU.wait(
+                        AMDGPU.@roc groupsize = threads gridsize = grid gemm16!(
+                            A,
+                            B,
+                            C,
+                        )
                     )
-                )
+                end
                 println(timings[i])
             end
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
         print("Time to total time ")

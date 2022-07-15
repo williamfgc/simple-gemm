@@ -152,7 +152,14 @@ function main(args::Array{String,1})::Int32
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
         print("Time to total time ")
@@ -240,7 +247,14 @@ function main64(args::Array{String,1})::Int32
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
 
@@ -329,7 +343,14 @@ function main16(args::Array{String,1})::Int32
 
             average_time = sum(timings) / (steps - 1)
             gflops = (2 * A_rows * A_cols * B_cols) * 1E-9 / average_time
-            println("GFLOPS: ", gflops, " steps: ", steps)
+            println(
+                "GFLOPS: ",
+                gflops,
+                " steps: ",
+                steps,
+                " average_time: ",
+                average_time,
+            )
         end
 
         print("Time to total time ")
