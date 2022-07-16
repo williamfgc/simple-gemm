@@ -1,7 +1,8 @@
 
 import sys
 import typing
-from pycuda import driver, compiler, gpuarray, tools
+import pycuda.driver as cuda
+from pycuda import gpuarray, compiler
 import numpy as np
 import time
 from math import ceil
@@ -69,9 +70,14 @@ def main():
     # C = np.zeros(dtype=np.float32, shape=(A_rows, B_cols))
     # tmp = _print_time(tmp, "initialize C")
 
-    A_d = gpuarray.to_gpu(A)
+    A_d = cuda.mem_alloc(A.nbytes)
+    tmp = _print_time(tmp, "allocate A_d")
+    B_d = cuda.mem_alloc(B.nbytes)
+    tmp = _print_time(tmp, "allocate B_d")
+
+    cuda.memcpy_htod(A_d, A)
     tmp = _print_time(tmp, "copy A")
-    B_d = gpuarray.to_gpu(B)
+    cuda.memcpy_htod(B_d, B)
     tmp = _print_time(tmp, "copy B")
     C_d = gpuarray.empty((A_rows, B_cols), np.float32)
     tmp = _print_time(tmp, "initialize C")
@@ -86,8 +92,8 @@ def main():
     gemm = mod.get_function("gemm")
 
     # call the kernel
-    gemm(A_d, B_d, C_d, A_rows, B_rows, B_cols, block=blocks, threads=threads)
-    driver.Context.synchronize()
+    gemm(A_d, B_d, C_d, A_rows, B_rows, B_cols, block=threads, grid=blocks)
+    cuda.Context.synchronize()
     tmp = _print_time(tmp, "simple gemm")
 
     if steps > 1:
@@ -96,7 +102,7 @@ def main():
         for i in range(1, steps):
             start = time.time()
             gemm(A_d, B_d, C_d, A_rows, B_rows, B_cols)
-            driver.Context.synchronize()
+            cuda.Context.synchronize()
             end = time.time()
             print("Time to simple gemm : " + str(end-start) + " s")
             average_time += (end-start)
