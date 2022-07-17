@@ -26,22 +26,25 @@ md"""
 begin
 
     function plot_Wombat_GFLOPS()
-        f = Figure()
+        
+		df = DataFrame(CSV.File("Wombat-A100-GFLOPS.csv"))
+		#println(df)
+
+		x = df."SIZE(M=N=K)"
+		
+		f = Figure()
         ax = Axis( f[1,1],
 		      # xscale = log10,
 		       yscale = log10,
-		       ylabel ="GLOPS",
+		       ylabel ="GFLOPS",
 		       xticklabelrotation = pi/4,
-		      # xticks = nelectrons,
+		       xticks = [0, 10_000, 20_000, 30_000, 40_000],
 		       xlabel = "SIZE (M=N=K)")
 	    xlims!(0, 40_000)
 	    ylims!(100, 20_000)
 
 
-        df = DataFrame(CSV.File("Wombat-A100-GFLOPS.csv"))
-		#println(df)
-
-		x = df."SIZE(M=N=K)"
+        
 
         scatterlines!(x, fill(19_000, size(x)[1]), label="Peak 19 TFLOPS", color= :black )
 		scatterlines!(df."SIZE(M=N=K)", df."CUBLAS-DGEMM", marker = '▲',  markersize = 15, color = :red, label="C-CUBLAS")
@@ -55,6 +58,39 @@ begin
     end
 
     plot_Wombat_GFLOPS()
+
+end
+
+# ╔═╡ 1ed00b96-bb9c-4f21-bc46-95354f60d90b
+begin
+
+    function plot_Crusher_GFLOPS()
+        f = Figure()
+        ax = Axis( f[1,1],
+		      # xscale = log10,
+		      # yscale = log10,
+		       ylabel ="GFLOPS",
+		       xticklabelrotation = pi/4,
+		      # xticks = nelectrons,
+		       xlabel = "SIZE (M=N=K)")
+	    xlims!(0, 20_000)
+	    ylims!(450, 700)
+
+
+        df = DataFrame(CSV.File("Crusher-MI250X-GFLOPS.csv"))
+		#println(df)
+
+		x = df."SIZE(M=N=K)"
+
+		scatterlines!(df."SIZE(M=N=K)", df."HIP", marker = 'x',  markersize = 15, color = :red, label="HIP")
+		scatterlines!(df."SIZE(M=N=K)", df."Julia-AMDGPU.jl", marker = 'x',  markersize = 15, color = :blue, label="Julia-AMDGPU.jl")
+		scatterlines!(df."SIZE(M=N=K)", df."KOKKOS-HIP", marker = 'x',  markersize = 15, color = :orange, label="Kokkos-HIP")
+        
+		f[1, 2] = Legend(f, ax, "Double AxB", framevisible = false)
+        f
+    end
+
+    plot_Crusher_GFLOPS()
 
 end
 
@@ -1268,9 +1304,10 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─e852f3a6-784b-4285-ae29-17c6a15a6c79
-# ╟─04dd6768-04b0-11ed-22ee-81473d6e2559
-# ╟─36854a22-999b-446a-b3fd-49e054a8639a
-# ╟─207bdfe2-d28d-4516-8413-0ed00994e4ef
+# ╠═e852f3a6-784b-4285-ae29-17c6a15a6c79
+# ╠═04dd6768-04b0-11ed-22ee-81473d6e2559
+# ╠═36854a22-999b-446a-b3fd-49e054a8639a
+# ╠═207bdfe2-d28d-4516-8413-0ed00994e4ef
+# ╠═1ed00b96-bb9c-4f21-bc46-95354f60d90b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
