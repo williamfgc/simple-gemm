@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
   cublasHandle_t handle;
   cublasCreate(&handle);
   cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, A_rows, A_cols, B_cols, 
-     1.0, A_d, A_rows, B, B_cols, 0., C, A_rows);
+     1.0, A_d, A_rows, B_d, B_cols, 0., C_d, A_rows);
   cudaDeviceSynchronize();
   tmp = print_dtime(tmp, "cublas gemm");
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
     for (i = 1; i < steps; ++i) {
       clock_gettime(CLOCK_MONOTONIC_RAW, &start_i);
       cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, A_rows, A_cols, B_cols, 
-                  1.0, A_d, A_rows, B, B_cols, 0., C, A_rows);
+                  1.0, A_d, A_rows, B_d, B_cols, 0., C_d, A_rows);
       cudaDeviceSynchronize();
       end_i = print_dtime(start_i, "cublas gemm");
       average_time += dtime(start_i, end_i);
