@@ -2,6 +2,7 @@
 import sys
 import typing
 from numba import cuda
+from numba.cuda.cudadrv.devicearray import DeviceNDArray
 import numpy as np
 import time
 from math import ceil
@@ -10,7 +11,7 @@ BLOCK_SIZE = 32
 
 
 @cuda.jit
-def gemm(A: np.ndarray, B: np.ndarray, C: np.ndarray):
+def gemm(A: DeviceNDArray, B: DeviceNDArray, C: DeviceNDArray):
 
     i, j = cuda.grid(2)
     if i < C.shape[0] and j < C.shape[1]:
@@ -67,8 +68,12 @@ def main():
     blocks = (grid_rows, grid_cols)
     threads = (BLOCK_SIZE, BLOCK_SIZE)
 
-    gemm[blocks, threads](A, B, C)
+    d_A = cuda.to_device(A)
+    d_B = cuda.to_device(B)
+    d_C = cuda.to_device(C)
+    gemm[blocks, threads](d_A, d_B, d_C)
     cuda.synchronize()
+    C = d_C.copy_to_host()
     tmp = _print_time(tmp, "simple gemm")
 
     if steps > 1:
@@ -76,8 +81,9 @@ def main():
         average_time = 0.
         for i in range(1, steps):
             start = time.time()
-            gemm[blocks, threads](A, B, C)
+            gemm[blocks, threads](d_A, d_B, d_C)
             cuda.synchronize()
+            C = d_C.copy_to_host()
             end = time.time()
             print("Time to simple gemm : " + str(end-start) + " s")
             average_time += (end-start)
