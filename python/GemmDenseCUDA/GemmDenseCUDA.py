@@ -73,7 +73,6 @@ def main():
     d_C = cuda.to_device(C)
     gemm[blocks, threads](d_A, d_B, d_C)
     cuda.synchronize()
-    C = d_C.copy_to_host()
     tmp = _print_time(tmp, "simple gemm")
 
     if steps > 1:
@@ -83,7 +82,6 @@ def main():
             start = time.time()
             gemm[blocks, threads](d_A, d_B, d_C)
             cuda.synchronize()
-            C = d_C.copy_to_host()
             end = time.time()
             print("Time to simple gemm : " + str(end-start) + " s")
             average_time += (end-start)
