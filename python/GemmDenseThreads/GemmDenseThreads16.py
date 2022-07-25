@@ -59,9 +59,9 @@ def main():
 
     rng = np.random.default_rng()
     start = time.time()
-    A = rng.random((A_rows, A_cols), dtype=np.float32)
+    A = rng.random((A_rows, A_cols), dtype=np.float16)
     tmp = _print_time(start, "initialize A")
-    B = rng.random((B_rows, B_cols), dtype=np.float32)
+    B = rng.random((B_rows, B_cols), dtype=np.float16)
     tmp = _print_time(tmp, "initialize B")
     C = np.zeros(dtype=np.float32, shape=(A_rows, B_cols))
     tmp = _print_time(tmp, "initialize C")

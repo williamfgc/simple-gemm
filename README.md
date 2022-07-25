@@ -23,6 +23,13 @@ CPU multithreading:
     $ julia -t 4 gemm-dense-threads.jl 5 5 5    
     ```
 
+- `GemmDenseThreads.py`: native Python Numba Threads implementation
+
+    ```
+    $ cd python/GemmDenseThreads
+    $ NUMBA_NUM_THREADS=4 python3 GemmDenseThreads.py 5 5 5    
+    ```
+
 - `GemmDenseBlas`: uses `LinearAlgebra.jl` (super-fast), if compiled with `OpenBLAS` set `OPENBLAS_NUM_THREADS` 
 
     ```
