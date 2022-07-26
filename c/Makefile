@@ -17,6 +17,12 @@ endif
 
 .PHONY: gemm_dense_common
 
+blas: gemm-dense-blas.c
+	$(CC) gemm-dense-blas.c -o gemm-dense-blas-$(CC) $(CC_FLAGS)
+
+blas: gemm-dense-blas64.c
+	$(CC) gemm-dense-blas64.c -o gemm-dense-blas64-$(CC) $(CC_FLAGS)
+
 hip: gemm-dense-hip.cpp
 	hipcc -O3 gemm-dense-hip.cpp -o gemm-dense-hip
 
