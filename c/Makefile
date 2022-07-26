@@ -20,7 +20,7 @@ endif
 blas: gemm-dense-blas.c
 	$(CC) gemm-dense-blas.c -o gemm-dense-blas-$(CC) $(CC_FLAGS)
 
-blas: gemm-dense-blas64.c
+blas64: gemm-dense-blas64.c
 	$(CC) gemm-dense-blas64.c -o gemm-dense-blas64-$(CC) $(CC_FLAGS)
 
 hip: gemm-dense-hip.cpp
@@ -32,11 +32,17 @@ hip64: gemm-dense-hip.cpp
 cublas64: gemm-dense-cublas64.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas64.cu -o gemm-dense-cublas64 -lcublas
 
+cuda: gemm-dense-cuda.cu
+	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda.cu -o gemm-dense-cuda
+
 cuda64: gemm-dense-cuda.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda64.cu -o gemm-dense-cuda64
 
-cuda: gemm-dense-cuda.cu
-	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cuda.cu -o gemm-dense-cuda
+openmp: gemm-dense-openmp.c
+	$(CC) gemm-dense-openmp.c -o gemm-dense-openmp-$(CC) $(CC_FLAGS)
+
+openmp64: gemm-dense-openmp.c
+	$(CC) gemm-dense-openmp64.c -o gemm-dense-openmp64-$(CC) $(CC_FLAGS)
 
 gemm_dense_common: gemm-dense-openmp.c
 	$(CC) gemm-dense-openmp.c -S -o gemm-dense-openmp-$(CC).s $(CC_FLAGS)
