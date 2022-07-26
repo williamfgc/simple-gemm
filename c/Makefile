@@ -1,6 +1,6 @@
 
 CC=clang
-CC_FLAGS=-O3 -march=native -fopenmp
+CC_FLAGS=-O3 -fopenmp
 # Wombat
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
@@ -40,6 +40,9 @@ cuda64: gemm-dense-cuda.cu
 
 openmp: gemm-dense-openmp.c
 	$(CC) gemm-dense-openmp.c -o gemm-dense-openmp-$(CC) $(CC_FLAGS)
+
+openmp16: gemm-dense-openmp16.c
+	$(CC) gemm-dense-openmp16.c -o gemm-dense-openmp16-$(CC) $(CC_FLAGS)
 
 openmp64: gemm-dense-openmp.c
 	$(CC) gemm-dense-openmp64.c -o gemm-dense-openmp64-$(CC) $(CC_FLAGS)
