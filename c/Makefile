@@ -29,6 +29,9 @@ hip: gemm-dense-hip.cpp
 hip64: gemm-dense-hip.cpp
 	hipcc -O3 gemm-dense-hip64.cpp -o gemm-dense-hip64
 
+hipblas: gemm-dense-hipblas.cpp
+	hipcc -O3 gemm-dense-hipblas.cpp -o gemm-dense-hipblas
+
 cublas: gemm-dense-cublas.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas.cu -o gemm-dense-cublas -lcublas
 
