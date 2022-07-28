@@ -29,6 +29,9 @@ hip: gemm-dense-hip.cpp
 hip64: gemm-dense-hip.cpp
 	hipcc -O3 gemm-dense-hip64.cpp -o gemm-dense-hip64
 
+cublas: gemm-dense-cublas.cu
+	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas.cu -o gemm-dense-cublas -lcublas
+
 cublas64: gemm-dense-cublas64.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas64.cu -o gemm-dense-cublas64 -lcublas
 
@@ -55,4 +58,4 @@ clang: gemm_dense_common
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-cuda64 gemm-dense-hip gemm-dense-hip64
+	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-cuda64 gemm-dense-hip gemm-dense-hip64 gemm-dense-cublas gemm-dense-cublas64

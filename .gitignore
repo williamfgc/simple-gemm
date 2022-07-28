@@ -46,5 +46,7 @@ Manifest.toml
 *-hip
 *-cuda64
 *-hip64
+*-cublas
+*-cublas64
 
 
