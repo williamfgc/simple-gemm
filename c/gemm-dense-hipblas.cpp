@@ -95,30 +95,28 @@ int main(int argc, char *argv[]) {
 
   // Allocate memory space on the device
   float *A_d, *B_d, *C_d;
-  if (hipdaMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
+  if (hipMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
     printf("A_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate A_d");
 
-  if (hipdaMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
+  if (hipMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
     printf("B_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate B_d");
 
-  if (hipdaMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
+  if (hipMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
     printf("C_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate C_d");
 
-  hipdaMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols,
-              hipdaMemcpyHostToDevice);
+  hipMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy A");
 
-  hipdaMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols,
-              hipdaMemcpyHostToDevice);
+  hipMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy B");
 
   unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
