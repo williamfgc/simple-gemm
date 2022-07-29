@@ -1,13 +1,15 @@
 
 CC=clang
 CC_FLAGS=-O3 -march=native -fopenmp
+
+# CUDA select compute capability of your targeted hardware
 # Wombat
+CUDA_ARCH=80
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
-# CUDA select compute capability of your targeted hardware
-# Wombat CUDA_ARCH=80
-CUDA_ARCH=50
 
+# Crusher 
+ROCBLAS_DIR=/opt/rocm-5.2.0
 
 ifneq (,$(findstring clang,$(CC)))
 all: clang
@@ -30,7 +32,10 @@ hip64: gemm-dense-hip.cpp
 	hipcc -O3 gemm-dense-hip64.cpp -o gemm-dense-hip64
 
 rocblas: gemm-dense-rocblas.cpp
-	hipcc -O3 gemm-dense-rocblas.cpp -o gemm-dense-rocblas -lrocblas
+	hipcc -O3 gemm-dense-rocblas.cpp -o gemm-dense-rocblas -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
+
+rocblas64: gemm-dense-rocblas64.cpp
+	hipcc -O3 gemm-dense-rocblas64.cpp -o gemm-dense-rocblas64 -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
 
 cublas: gemm-dense-cublas.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas.cu -o gemm-dense-cublas -lcublas
