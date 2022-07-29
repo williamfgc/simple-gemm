@@ -8,8 +8,9 @@ CUDA_ARCH=80
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 
-# Crusher 
+# Crusher GPU
 ROCBLAS_DIR=/opt/rocm-5.2.0
+# CC_FLAGS=-O3 --amdgpu-target=gfx90a
 
 ifneq (,$(findstring clang,$(CC)))
 all: clang
@@ -26,16 +27,16 @@ blas64: gemm-dense-blas64.c
 	$(CC) gemm-dense-blas64.c -o gemm-dense-blas64-$(CC) $(CC_FLAGS)
 
 hip: gemm-dense-hip.cpp
-	hipcc -O3 gemm-dense-hip.cpp -o gemm-dense-hip
+	hipcc $(CC_FLAGS) gemm-dense-hip.cpp -o gemm-dense-hip
 
-hip64: gemm-dense-hip.cpp
-	hipcc -O3 gemm-dense-hip64.cpp -o gemm-dense-hip64
+hip64: gemm-dense-hip64.cpp
+	hipcc $(CC_FLAGS) gemm-dense-hip64.cpp -o gemm-dense-hip64
 
 rocblas: gemm-dense-rocblas.cpp
-	hipcc -O3 gemm-dense-rocblas.cpp -o gemm-dense-rocblas -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
+	hipcc $(CC_FLAGS) gemm-dense-rocblas.cpp -o gemm-dense-rocblas -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
 
 rocblas64: gemm-dense-rocblas64.cpp
-	hipcc -O3 gemm-dense-rocblas64.cpp -o gemm-dense-rocblas64 -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
+	hipcc $(CC_FLAGS) gemm-dense-rocblas64.cpp -o gemm-dense-rocblas64 -I$(ROCBLAS_DIR)/include -L$(ROCBLAS_DIR)/lib -lrocblas
 
 cublas: gemm-dense-cublas.cu
 	nvcc -O3 -arch=sm_$(CUDA_ARCH) -Wno-deprecated-gpu-targets gemm-dense-cublas.cu -o gemm-dense-cublas -lcublas
