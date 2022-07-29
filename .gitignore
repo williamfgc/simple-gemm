@@ -43,8 +43,12 @@ Manifest.toml
 *.so
 
 *-cuda
-*-hip
 *-cuda64
+*-hip
 *-hip64
+*-cublas
+*-cublas64
+*-rocblas
+*-rocblas64
 
 

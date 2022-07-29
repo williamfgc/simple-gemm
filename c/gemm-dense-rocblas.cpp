@@ -3,16 +3,15 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <cublas_v2.h>
+#include "hip/hip_runtime.h"
+#include "rocblas/rocblas.h"
 
-static int BLOCK_SIZE = 32;
-
-static void fill_random(double *A, const int64_t n, const int64_t m) {
+static void fill_random(float *A, const int64_t n, const int64_t m) {
 
   int64_t i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
-      A[i * m + j] = (double)rand() / (double)RAND_MAX;
+      A[i * m + j] = (float)rand() / (float)RAND_MAX;
     }
   }
 }
@@ -28,8 +27,7 @@ static struct timespec print_dtime(struct timespec start, const char *process) {
   return end;
 }
 
-static void print_matrix(double *A, const int64_t A_rows,
-                         const int64_t A_cols) {
+static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
 
   int64_t i, j;
   printf("[");
@@ -49,7 +47,7 @@ static double dtime(struct timespec start, struct timespec end) {
 
 int main(int argc, char *argv[]) {
 
-  // Assign seed from current time integer
+  // Assign seed from hiprrent time integer
   time_t t;
   srand((unsigned int)time(&t));
 
@@ -77,16 +75,13 @@ int main(int argc, char *argv[]) {
   struct timespec start, tmp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  double *A_h =
-      (double *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(double));
+  float *A_h = (float *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(float));
   tmp = print_dtime(start, "allocate A");
 
-  double *B_h =
-      (double *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(double));
+  float *B_h = (float *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(float));
   tmp = print_dtime(tmp, "allocate B");
 
-  double *C_h =
-      (double *)malloc((size_t)A_rows * (size_t)B_cols * sizeof(double));
+  float *C_h = (float *)malloc((size_t)A_rows * (size_t)B_cols * sizeof(float));
   tmp = print_dtime(tmp, "allocate C");
 
   // value-init to zero
@@ -97,50 +92,44 @@ int main(int argc, char *argv[]) {
   tmp = print_dtime(tmp, "fill B");
 
   // Allocate memory space on the device
-  double *A_d, *B_d, *C_d;
-  if (cudaMalloc((void **)&A_d, sizeof(double) * A_rows * A_cols)) {
+  float *A_d, *B_d, *C_d;
+  if (hipMalloc((void **)&A_d, sizeof(float) * A_rows * A_cols)) {
     printf("A_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate A_d");
 
-  if (cudaMalloc((void **)&B_d, sizeof(double) * B_rows * B_cols)) {
+  if (hipMalloc((void **)&B_d, sizeof(float) * B_rows * B_cols)) {
     printf("B_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate B_d");
 
-  if (cudaMalloc((void **)&C_d, sizeof(double) * A_rows * B_cols)) {
+  if (hipMalloc((void **)&C_d, sizeof(float) * A_rows * B_cols)) {
     printf("C_d allocation failure\n");
     exit(1); // leaky exit
   }
   tmp = print_dtime(tmp, "allocate C_d");
 
-  cudaMemcpy(A_d, A_h, sizeof(double) * A_rows * A_cols,
-             cudaMemcpyHostToDevice);
+  hipMemcpy(A_d, A_h, sizeof(float) * A_rows * A_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy A");
 
-  cudaMemcpy(B_d, B_h, sizeof(double) * B_rows * B_cols,
-             cudaMemcpyHostToDevice);
+  hipMemcpy(B_d, B_h, sizeof(float) * B_rows * B_cols, hipMemcpyHostToDevice);
   tmp = print_dtime(tmp, "copy B");
 
-  unsigned int grid_rows = (A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  unsigned int grid_cols = (B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-  dim3 dimGrid(grid_cols, grid_rows);
-  dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-
   int32_t i;
-  // Create a handle for CUBLAS
-  cublasHandle_t handle;
-  cublasCreate(&handle);
-  const double alpha = 1.;
-  const double beta = 0.;
+  // Create a handle for rocBLAS
+  rocblas_handle handle;
+  rocblas_create_handle(&handle);
 
-  cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, A_rows, A_cols, B_cols, &alpha,
-              A_d, A_rows, B_d, B_cols, &beta, C_d, A_rows);
-  cudaDeviceSynchronize();
-  tmp = print_dtime(tmp, "cublas gemm");
+  const float alpha = 1.;
+  const float beta = 0.;
+
+  rocblas_sgemm(handle, rocblas_operation_none, rocblas_operation_none, A_rows,
+                A_cols, B_cols, &alpha, A_d, A_rows, B_d, B_cols, &beta, C_d,
+                A_rows);
+  hipDeviceSynchronize();
+  tmp = print_dtime(tmp, "hipblas gemm");
 
   if (steps > 1) {
 
@@ -149,10 +138,11 @@ int main(int argc, char *argv[]) {
 
     for (i = 1; i < steps; ++i) {
       clock_gettime(CLOCK_MONOTONIC_RAW, &start_i);
-      cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, A_rows, A_cols, B_cols,
-                  &alpha, A_d, A_rows, B_d, B_cols, &beta, C_d, A_rows);
-      cudaDeviceSynchronize();
-      end_i = print_dtime(start_i, "cublas gemm");
+      rocblas_sgemm(handle, rocblas_operation_none, rocblas_operation_none,
+                    A_rows, A_cols, B_cols, &alpha, A_d, A_rows, B_d, B_cols,
+                    &beta, C_d, A_rows);
+      hipDeviceSynchronize();
+      end_i = print_dtime(start_i, "hipblas gemm");
       average_time += dtime(start_i, end_i);
     }
     average_time /= (steps - 1);
@@ -162,8 +152,7 @@ int main(int argc, char *argv[]) {
            average_time);
   }
 
-  cudaMemcpy(C_h, C_d, sizeof(double) * A_rows * B_cols,
-             cudaMemcpyDeviceToHost);
+  hipMemcpy(C_h, C_d, sizeof(float) * A_rows * B_cols, hipMemcpyDeviceToHost);
   tmp = print_dtime(tmp, "copy C");
 
   // print_matrix(A_h, A_rows, A_cols);
@@ -172,10 +161,10 @@ int main(int argc, char *argv[]) {
 
   print_dtime(start, "total time");
 
-  cublasDestroy(handle);
-  cudaFree(A_d);
-  cudaFree(B_d);
-  cudaFree(C_d);
+  rocblas_destroy_handle(handle);
+  hipFree(A_d);
+  hipFree(B_d);
+  hipFree(C_d);
 
   free(A_h);
   free(B_h);
