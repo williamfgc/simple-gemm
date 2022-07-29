@@ -67,4 +67,6 @@ clang: gemm_dense_common
 .PHONY: clean
 
 clean : 
-	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-cuda64 gemm-dense-hip gemm-dense-hip64 gemm-dense-cublas gemm-dense-cublas64
+	rm *.s *.ll *-gcc *-*clang gemm-dense-cuda gemm-dense-cuda64 gemm-dense-hip gemm-dense-hip64 \
+	gemm-dense-cublas gemm-dense-cublas64 \
+	gemm-dense-rocblas gemm-dense-rocblas64
