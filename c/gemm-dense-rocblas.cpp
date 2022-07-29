@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
   int32_t i;
   // Create a handle for rocBLAS
   rocblas_handle handle;
-  rstatus = rocblas_create_handle(&handle);
+  rocblas_create_handle(&handle);
 
   const float alpha = 1.;
   const float beta = 0.;
