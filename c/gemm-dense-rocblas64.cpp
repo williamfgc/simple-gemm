@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
 
     for (i = 1; i < steps; ++i) {
       clock_gettime(CLOCK_MONOTONIC_RAW, &start_i);
-      rocblas_sgemm(handle, rocblas_operation_none, rocblas_operation_none,
+      rocblas_dgemm(handle, rocblas_operation_none, rocblas_operation_none,
                     A_rows, A_cols, B_cols, &alpha, A_d, A_rows, B_d, B_cols,
                     &beta, C_d, A_rows);
       hipDeviceSynchronize();
