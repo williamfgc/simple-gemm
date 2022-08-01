@@ -5,12 +5,12 @@
 
 #include "cblas.h"
 
-static void fill_random(double *A, const int64_t n, const int64_t m) {
+static void fill_random(float *A, const int64_t n, const int64_t m) {
 
   int64_t i, j;
   for (i = 0; i < n; ++i) {
     for (j = 0; j < m; ++j) {
-      A[i * m + j] = (double)rand() / (double)RAND_MAX;
+      A[i * m + j] = (float)rand() / (float)RAND_MAX;
     }
   }
 }
@@ -39,8 +39,7 @@ static double dtime(struct timespec start, struct timespec end) {
          1E6;
 }
 
-static void print_matrix(double *A, const int64_t A_rows,
-                         const int64_t A_cols) {
+static void print_matrix(float *A, const int64_t A_rows, const int64_t A_cols) {
 
   int64_t i, j;
   printf("[");
