@@ -6,8 +6,9 @@ CC_FLAGS=-O3 -march=native -fopenmp
 # Wombat
 CUDA_ARCH=80
 #BLAS_DIR=/autofs/nccs-svm1_wombat_sw/ARM_Compiler/22.0/armpl-22.0.0_AArch64_RHEL-8_arm-linux-compiler_aarch64-linux
-#BLAS_INC=-I$(BLAS_DIR)/include 
-#BLAS_LIB=-L$(BLAS_DIR)/lib/libarmpl_mp.so
+#BLAS_INC=-DINTEGER64 -fopenmp -armpl=ilp64,parallel
+#BLAS_LIB=-DINTEGER64 -fopenmp -armpl=ilp64,parallel
+
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 
