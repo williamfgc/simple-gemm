@@ -15,10 +15,10 @@ static void fill_random(double *A, const int64_t n, const int64_t m) {
   }
 }
 
-static void gemm(double *A, double *B, double *C, const int64_t A_rows,
+static void gemm(float *A, float *B, float *C, const int64_t A_rows,
                  const int64_t A_cols, const int64_t B_cols) {
 
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, A_rows, B_cols, A_cols,
+  cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, A_rows, B_cols, A_cols,
               1.0f, A, A_cols, B, A_cols, 0, C, B_cols);
 }
 
@@ -82,16 +82,14 @@ int main(int argc, char *argv[]) {
   struct timespec start, tmp;
   clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-  double *A =
-      (double *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(double));
+  float *A = (float *)malloc((size_t)A_rows * (size_t)A_cols * sizeof(float));
   tmp = print_dtime(start, "allocate A");
 
-  double *B =
-      (double *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(double));
+  float *B = (float *)malloc((size_t)B_rows * (size_t)B_cols * sizeof(float));
   tmp = print_dtime(tmp, "allocate B");
 
   // value-init to zero
-  double *C = (double *)calloc((size_t)A_rows * (size_t)B_cols, sizeof(double));
+  float *C = (float *)calloc((size_t)A_rows * (size_t)B_cols, sizeof(float));
   tmp = print_dtime(tmp, "initialize C");
 
   fill_random(A, A_rows, A_cols);
