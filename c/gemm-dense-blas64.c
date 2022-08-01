@@ -17,9 +17,9 @@ static void fill_random(double *A, const int64_t n, const int64_t m) {
 
 static void gemm(double *A, double *B, double *C, const int64_t A_rows,
                  const int64_t A_cols, const int64_t B_cols) {
-    
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, A_rows, B_cols,
-                A_cols, 1.0f, A, A_cols, B, B_rows, 0, C, B_cols);
+
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, A_rows, B_cols, A_cols,
+              1.0f, A, A_cols, B, A_cols, 0, C, B_cols);
 }
 
 static struct timespec print_dtime(struct timespec start, const char *process) {
