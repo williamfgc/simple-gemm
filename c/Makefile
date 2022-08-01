@@ -5,6 +5,9 @@ CC_FLAGS=-O3 -march=native -fopenmp
 # CUDA select compute capability of your targeted hardware
 # Wombat
 CUDA_ARCH=80
+#BLAS_DIR=/autofs/nccs-svm1_wombat_sw/ARM_Compiler/22.0/armpl-22.0.0_AArch64_RHEL-8_arm-linux-compiler_aarch64-linux
+#BLAS_INC=-I$(BLAS_DIR)/include 
+#BLAS_LIB=-L$(BLAS_DIR)/lib/libarmpl_mp.so
 # CC_FLAGS=-O3 -fopenmp 
 # CC_FLAGS=-O3 -fopenmp -mcpu=neoverse-v1 -> results in seg fault
 
@@ -21,10 +24,10 @@ endif
 .PHONY: gemm_dense_common
 
 blas: gemm-dense-blas.c
-	$(CC) gemm-dense-blas.c -o gemm-dense-blas-$(CC) $(CC_FLAGS)
+	$(CC) gemm-dense-blas.c -o gemm-dense-blas-$(CC) $(CC_FLAGS) $(BLAS_INC) $(BLAS_LIB)
 
 blas64: gemm-dense-blas64.c
-	$(CC) gemm-dense-blas64.c -o gemm-dense-blas64-$(CC) $(CC_FLAGS)
+	$(CC) gemm-dense-blas64.c -o gemm-dense-blas64-$(CC) $(CC_FLAGS) $(BLAS_INC) $(BLAS_LIB)
 
 hip: gemm-dense-hip.cpp
 	hipcc $(CC_FLAGS) gemm-dense-hip.cpp -o gemm-dense-hip
