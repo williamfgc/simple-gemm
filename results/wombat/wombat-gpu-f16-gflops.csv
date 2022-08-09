@@ -1,4 +1,4 @@
-SIZE(M=N=K) Julia Python
+SIZE(M=N=K) Julia Python-Numba
 4096 1774.90 292.00
 5120 1902.11 282.29
 6144 1877.11 286.05
