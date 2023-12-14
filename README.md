@@ -45,3 +45,18 @@ GPU :
     $ cd GemmDenseCUDA
     $ julia gemm-dense-cuda.jl 5 5 5
     ```
+    
+# Citation
+If you find the repository useful, please cite the reference [2023 IPDPSW paper](https://doi.org/10.1109/IPDPSW59300.2023.00068):
+
+```
+@INPROCEEDINGS{10196600,
+  author={Godoy, William F. and Valero-Lara, Pedro and Dettling, T. Elise and Trefftz, Christian and Jorquera, Ian and Sheehy, Thomas and Miller, Ross G. and Gonzalez-Tallada, Marc and Vetter, Jeffrey S. and Churavy, Valentin},
+  booktitle={2023 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW)}, 
+  title={Evaluating performance and portability of high-level programming models: Julia, Python/Numba, and Kokkos on exascale nodes}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={373-382},
+  doi={10.1109/IPDPSW59300.2023.00068}}
+```
