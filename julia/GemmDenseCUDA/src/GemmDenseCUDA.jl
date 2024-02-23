@@ -124,8 +124,8 @@ function main(args::Array{String,1})::Int32
         print("Time to fill B")
         @time CUDA.rand!(B)
 
-        grid_rows::Int32 = ceil((A_rows + BLOCK_SIZE - 1) / BLOCK_SIZE)
-        grid_cols::Int32 = ceil((B_cols + BLOCK_SIZE - 1) / BLOCK_SIZE)
+        grid_rows::Int32 = cld(A_rows, BLOCK_SIZE)
+        grid_cols::Int32 = cld(B_colds, BLOCK_SIZE)
         blocks = (grid_rows, grid_cols)
         threads = (BLOCK_SIZE, BLOCK_SIZE)
 
