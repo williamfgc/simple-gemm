@@ -5,68 +5,22 @@ import CUDA
 BLOCK_SIZE = 32
 
 function gemm!(
-    A::CUDA.CuDeviceMatrix{Float32,1},
-    B::CUDA.CuDeviceMatrix{Float32,1},
-    C::CUDA.CuDeviceMatrix{Float32,1},
-)
+    A::CUDA.CuDeviceMatrix{T,1},
+    B::CUDA.CuDeviceMatrix{T,1},
+    C::CUDA.CuDeviceMatrix{T,1},
+) where T
 
-    row = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
-    col = (CUDA.blockIdx().y - 1) * CUDA.blockDim().y + CUDA.threadIdx().y
+    row = (CUDA.blockIdx().x - Int32(1)) * CUDA.blockDim().x + CUDA.threadIdx().x
+    col = (CUDA.blockIdx().y - Int32(1)) * CUDA.blockDim().y + CUDA.threadIdx().y
 
-    sum = Float32(0.0)
-
-    if row <= size(A, 1) && col <= size(B, 2)
-
-        for i = 1:size(A, 2)
-            @inbounds sum += A[row, i] * B[i, col]
-        end
-        C[row, col] = sum
-    end
-
-    return
-end
-
-function gemm16!(
-    A::CUDA.CuDeviceMatrix{Float16,1},
-    B::CUDA.CuDeviceMatrix{Float16,1},
-    C::CUDA.CuDeviceMatrix{Float32,1},
-)
-    row = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
-    col = (CUDA.blockIdx().y - 1) * CUDA.blockDim().y + CUDA.threadIdx().y
-
-    sum = Float32(0.0)
+    sum = zero(eltype(C))
 
     if row <= size(A, 1) && col <= size(B, 2)
 
-        for i = 1:size(A, 2)
+        @simd for i = 1:size(A, 2)
             @inbounds sum += A[row, i] * B[i, col]
         end
-        C[row, col] = sum
-    end
-
-    return
-end
-
-
-
-
-function gemm64!(
-    A::CUDA.CuDeviceMatrix{Float64,1},
-    B::CUDA.CuDeviceMatrix{Float64,1},
-    C::CUDA.CuDeviceMatrix{Float64,1},
-)
-
-    row = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
-    col = (CUDA.blockIdx().y - 1) * CUDA.blockDim().y + CUDA.threadIdx().y
-
-    sum = Float64(0.0)
-
-    if row <= size(A, 1) && col <= size(B, 2)
-
-        for i = 1:size(A, 2)
-            @inbounds sum += A[row, i] * B[i, col]
-        end
-        C[row, col] = sum
+        @inbounds C[row, col] = sum
     end
 
     return
@@ -229,7 +183,7 @@ function main64(args::Array{String,1})::Int32
 
         print("Time to simple gemm ")
         @time begin
-            CUDA.@cuda threads = threads blocks = blocks gemm64!(A, B, C)
+            CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
             CUDA.synchronize()
         end
 
@@ -238,7 +192,7 @@ function main64(args::Array{String,1})::Int32
             for i = 2:steps
                 print("Time to simple gemm ")
                 timings[i] = @elapsed begin
-                    CUDA.@cuda threads = threads blocks = blocks gemm64!(A, B, C)
+                    CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
                     CUDA.synchronize()
                 end
 
@@ -325,7 +279,7 @@ function main16(args::Array{String,1})::Int32
 
         print("Time to simple gemm ")
         @time begin
-            CUDA.@cuda threads = threads blocks = blocks gemm16!(A, B, C)
+            CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
             CUDA.synchronize()
         end
 
@@ -334,7 +288,7 @@ function main16(args::Array{String,1})::Int32
             for i = 2:steps
                 print("Time to simple gemm ")
                 timings[i] = @elapsed begin
-                    CUDA.@cuda threads = threads blocks = blocks gemm16!(A, B, C)
+                    CUDA.@cuda threads = threads blocks = blocks gemm!(A, B, C)
                     CUDA.synchronize()
                 end
 
